@@ -20,7 +20,7 @@ Follow this workflow whenever the skill is invoked:
 8. If a new code path logically replaces an older path (for example, an endpoint), flag when the old path is neither removed nor marked as deprecated.
 9. Note new packages being added, if any.
 10. Find edge cases or bugs in logic.
-11. Check if any context comments were removed without a clear reason. Flag cases where the removed comment captured information not obvious from the code alone.
+11. Check if any context comments were removed without a clear reason or if parameters/arguments lack documentation when added or updated. Flag cases where removed comments captured information not obvious from the code alone, and flag missing documentation on parameter additions or updates.
 12. Summarize with a final review.
 
 ## Execution Pattern
