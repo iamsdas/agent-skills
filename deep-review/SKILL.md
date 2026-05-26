@@ -20,7 +20,8 @@ Follow this workflow whenever the skill is invoked:
 8. If a new code path logically replaces an older path (for example, an endpoint), flag when the old path is neither removed nor marked as deprecated.
 9. Note new packages being added, if any.
 10. Find edge cases or bugs in logic.
-11. Summarize with a final review.
+11. Check if any context comments were removed without a clear reason. Flag cases where the removed comment captured information not obvious from the code alone.
+12. Summarize with a final review.
 
 ## Execution Pattern
 
@@ -31,6 +32,7 @@ Follow this workflow whenever the skill is invoked:
   - Test coverage analysis by changed component
   - Redundancy, dead-code, and logic bug scan
   - Dependency delta review
+  - Context comment removal scan
 - If a PR exists, include PR title/body/discussion context in the review input.
 - If no PR exists, proceed with branch-only review and explicitly note that limitation.
 - Prioritize findings by severity and include concrete file/symbol references.
