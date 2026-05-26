@@ -25,11 +25,11 @@ Use this skill to prevent premature implementation planning. First align on prod
    - Keep questions practical and decision-oriented.
    - Keep asking questions one at a time till you reach a shared understanding of the request with the user.
    - Do not ask questions that can be answered by searching the codebase.
-   - Suggest a list of options for the user to choose from for each question.
+   - Use the `AskUserQuestion` tool to present each question interactively with selectable options. Do NOT list questions as plain markdown text — always invoke AskUserQuestion so the user gets a clickable UI. Include 2–4 options per question; the tool automatically adds an "Other" option for freeform input. You may batch up to 4 related questions in a single AskUserQuestion call when they are independent of each other.
 
 3. Confirm readiness:
    - Present a concise "understanding so far" recap.
-   - Ask for explicit confirmation to proceed (for example: "Should I now switch to planning mode and draft implementation steps?").
+   - Use AskUserQuestion to ask for explicit confirmation to proceed, with options like "Yes, switch to planning mode" and "No, keep refining".
    - If user does not confirm, continue refinement.
 
 4. Switch to implementation planning mode only after confirmation
@@ -52,26 +52,24 @@ Use this structure in the pre-confirmation phase:
 - Desired user outcome: ...
 - Current behavior: ... / Unknown
 - Behavior gap: ...
+```
 
-## Clarifying Questions
+Then immediately invoke AskUserQuestion with up to 4 clarifying questions (batch independent ones together):
 
-- Q1. ...
-  - A. ....
-  - B. ....
-  - ....
+```
+AskUserQuestion(questions=[
+  { question: "Q1 text?", header: "Short label", options: [{label: "A", description: "..."}, {label: "B", description: "..."}] },
+  { question: "Q2 text?", header: "Short label", options: [...] },
+])
+```
 
-- Q2. ...
-  - A. ....
-  - B. ....
-  - ....
+After all questions are answered, output a "Current understanding" recap and invoke AskUserQuestion one final time to confirm:
 
-- Q3. ...
-  - A. ....
-  - B. ....
-  - ....
-
-## Confirmation
-
-Current understanding: ...
-Should I switch to planning mode and draft implementation details?
+```
+AskUserQuestion(questions=[
+  { question: "Should I switch to planning mode and draft implementation details?", header: "Confirm", options: [
+    {label: "Yes, proceed to planning", description: "Switch to implementation planning mode"},
+    {label: "No, keep refining", description: "Continue asking clarifying questions"}
+  ]}
+])
 ```
