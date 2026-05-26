@@ -1,7 +1,6 @@
 ---
 name: scope-requirements
 description: Runs a two-phase planning flow: first summarize user requirements and current behavior from an end-user product perspective, then ask expectation-refinement questions without implementation detail. Use when the user invokes /scope-requirements or asks for structured requirement clarification before implementation planning.
-disable-model-invocation: true
 ---
 
 # Scope Requirements
