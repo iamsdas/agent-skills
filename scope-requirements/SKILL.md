@@ -29,10 +29,13 @@ Use this skill to prevent premature implementation planning. First align on prod
 
 3. Confirm readiness:
    - Present a concise "understanding so far" recap.
-   - Use AskUserQuestion to ask for explicit confirmation to proceed, with options like "Yes, switch to planning mode" and "No, keep refining".
+   - Use AskUserQuestion to ask if the scope is complete, with options like "Yes, scope is complete" and "No, keep refining".
    - If user does not confirm, continue refinement.
 
-4. Switch to implementation planning mode only after confirmation
+4. Handoff the PRD to another agent:
+   - Once the user confirms the scope is complete, produce a final PRD document (see PRD Template below).
+   - Invoke the `handoff` skill, passing the PRD as the handoff document so a separate planning/implementation agent can pick it up.
+   - Do NOT switch to planning mode yourself. Do NOT write implementation steps.
 
 ## Guardrails
 
@@ -67,9 +70,36 @@ After all questions are answered, output a "Current understanding" recap and inv
 
 ```
 AskUserQuestion(questions=[
-  { question: "Should I switch to planning mode and draft implementation details?", header: "Confirm", options: [
-    {label: "Yes, proceed to planning", description: "Switch to implementation planning mode"},
+  { question: "Is the scope complete and ready to hand off?", header: "Confirm scope", options: [
+    {label: "Yes, hand it off", description: "Produce the final PRD and hand off to a planning agent"},
     {label: "No, keep refining", description: "Continue asking clarifying questions"}
   ]}
 ])
+```
+
+Once confirmed, write the final PRD using this template, then invoke the `handoff` skill with the PRD as context:
+
+```markdown
+# PRD: <feature name>
+
+## Desired Outcome
+...
+
+## Current Behavior
+...
+
+## Behavior Gap
+...
+
+## Scope & Constraints
+...
+
+## Acceptance Criteria
+- ...
+
+## Out of Scope
+- ...
+
+## Open Questions / Risks
+- ...
 ```
