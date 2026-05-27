@@ -26,15 +26,28 @@ Follow this workflow whenever the skill is invoked:
 
 ## Execution Pattern
 
-- Split analysis into focused subagent tasks where possible:
-  - Branch and PR context
-  - API/schema/breaking-change risk
-  - Migration and compatibility checks
-  - Test coverage analysis by changed component
-  - Redundancy, dead-code, and logic bug scan
-  - Dependency delta review
-  - Context comment removal scan
-  - Parameter/config validation (usage check + name/value correctness via source or docs)
+**Model selection:**
+- Use `haiku` for exploratory/data-gathering subagents (branch context, dependency delta, file listings, git log, PR info)
+- Use `sonnet` for analysis subagents that require judgment (breaking changes, migration compatibility, test coverage, redundancy/dead-code, logic bugs, comment/param validation)
+
+**Parallelism:**
+- Spawn ALL subagents in a single message so they run concurrently. Do NOT wait for one to finish before launching the next.
+- Run data-gathering agents first (haiku) and pass their output into analysis agents (sonnet) only when there is a true dependency. If analysis can proceed from the diff alone, launch it immediately in parallel with the exploratory agents.
+- Use `run_in_background: true` for every subagent. Collect all results before synthesizing the final review.
+
+**Subagent split:**
+
+| Subagent | Model | Task |
+|---|---|---|
+| context | haiku | Branch name, commit messages vs main, PR title/body/discussion |
+| deps | haiku | New packages added, version changes |
+| breaking | sonnet | Breaking API/schema/interface changes |
+| migrations | sonnet | Migration compatibility and backwards compatibility |
+| tests | sonnet | Test coverage gaps per changed component |
+| redundancy | sonnet | Duplicate code, dead code, stale paths, unreachable branches |
+| logic | sonnet | Edge cases, bugs, logic errors |
+| comments-params | sonnet | Removed context comments, undocumented new params/configs/flags, param name/value validation |
+
 - If a PR exists, include PR title/body/discussion context in the review input.
 - If no PR exists, proceed with branch-only review and explicitly note that limitation.
 - Prioritize findings by severity and include concrete file/symbol references.
