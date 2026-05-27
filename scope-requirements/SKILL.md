@@ -19,8 +19,10 @@ Use this skill to prevent premature implementation planning. First align on prod
 
 2. Refine expectations without implementation details:
    - Ask focused clarification questions about outcomes, scope, constraints, and acceptance signals.
+   - Understand how the new change is meant to be used — who triggers it, in what context, and what the expected interaction flow looks like.
    - Surface hidden assumptions, identify failure modes early and validate non-functional requirements.
    - If the request involves a migration (data, API, workflow, or platform), explicitly ask whether backward compatibility is required.
+   - Identify related or dependent logic that may also need to change as a consequence of this request, and ask the user whether those areas are in scope.
    - Do not discuss architecture, code structure, libraries, or low-level technical steps.
    - Keep questions practical and decision-oriented.
    - Keep asking questions one at a time till you reach a shared understanding of the request with the user.
@@ -29,13 +31,14 @@ Use this skill to prevent premature implementation planning. First align on prod
 
 3. Confirm readiness:
    - Present a concise "understanding so far" recap.
+   - Before offering confirmation, review all open questions surfaced during refinement. If any remain unresolved, ask them now — do not proceed to confirmation while unknowns exist.
    - Use AskUserQuestion to ask if the scope is complete, with options like "Yes, scope is complete" and "No, keep refining".
    - If user does not confirm, continue refinement.
 
-4. Handoff the PRD to another agent:
-   - Once the user confirms the scope is complete, produce a final PRD document (see PRD Template below).
-   - Invoke the `handoff` skill, passing the PRD as the handoff document so a separate planning/implementation agent can pick it up.
-   - Do NOT switch to planning mode yourself. Do NOT write implementation steps.
+4. Output the final ticket:
+   - Once the user confirms the scope is complete, produce the final ticket using the Notion Task Template below.
+   - Output it as a clean markdown block the user can copy directly (no preamble, no trailing commentary).
+   - Do NOT invoke the handoff skill. Do NOT switch to planning mode. Do NOT write implementation steps.
 
 ## Guardrails
 
@@ -44,6 +47,7 @@ Use this skill to prevent premature implementation planning. First align on prod
 - If existing behavior is unknown, say so and ask for missing context.
 - Only target backward compatibility when the user explicitly requires it; do not assume it by default.
 - Treat confirmation as required, not optional.
+- Never offer the "scope is complete" confirmation while open questions remain — resolve them first.
 
 ## Response Template
 
@@ -77,29 +81,29 @@ AskUserQuestion(questions=[
 ])
 ```
 
-Once confirmed, write the final PRD using this template, then invoke the `handoff` skill with the PRD as context:
+Once confirmed, output ONLY the following block — no intro sentence, no "here is your ticket", nothing before or after:
 
 ```markdown
-# PRD: <feature name>
+# <Title>
 
-## Desired Outcome
-...
+## What & Why
 
-## Current Behavior
-...
+<2–4 sentences. What is this task? What is broken or missing today, and why does it matter? Give enough context that a planning agent can reason about the problem without needing to ask follow-up questions.>
 
-## Behavior Gap
-...
+## Desired Behavior
 
-## Scope & Constraints
-...
+<What should be true when this is done? Describe from the user's perspective — what they can do, see, or experience that they couldn't before.>
+
+## Constraints
+
+- <anything that must stay the same, must not break, or limits the solution space>
 
 ## Acceptance Criteria
-- ...
+
+- [ ] <specific, testable outcome>
+- [ ] <edge case or error condition that must be handled>
 
 ## Out of Scope
-- ...
 
-## Open Questions / Risks
-- ...
+- <related thing explicitly excluded>
 ```
