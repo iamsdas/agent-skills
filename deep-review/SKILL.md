@@ -8,60 +8,86 @@ disable-model-invocation: true
 
 ## Instructions
 
-Follow this workflow whenever the skill is invoked:
+Spawn all subagents defined below in a single message so they run concurrently. Collect all results, then synthesize the final review. If a PR exists, pass PR title/body/discussion into relevant subagents. If no PR exists, proceed with branch-only review and note that limitation in the summary.
 
-1. Try using subagents for individual tasks as much as possible.
-2. Get context from the current branch and summarize changes being done. Also check commit messages of the branch compared to `main` and PR info for extra context.
-3. Check for any breaking changes.
-4. Check for any migrations done while keeping backwards compatibility.
-5. Consolidate testing information for each part of code being changed and flag missing test cases.
-6. Check for redundant code changes (duplicates/already existing stuff).
-7. Check for dead code and stale paths that should be removed.
-8. If a new code path logically replaces an older path (for example, an endpoint), flag when the old path is neither removed nor marked as deprecated.
-9. Note new packages being added, if any.
-10. Find edge cases or bugs in logic.
-11. Check if any context comments were removed without a clear reason or if parameters/arguments lack documentation when added or updated. Flag cases where removed comments captured information not obvious from the code alone, and flag missing documentation on parameter additions or updates.
-12. For any parameter, config value, or flag that is newly introduced in this diff, validate that the name and value are correct — check source code (type definitions, compiler errors) or look up official documentation (search online if necessary). Never assume a new parameter is valid without evidence.
-13. Summarize with a final review.
+## Execution Rules
 
-## Execution Pattern
+- **Model parameter:** You MUST pass the `model` parameter on every Agent tool call. Never omit it. Subagents spawned without a model parameter are a bug.
+- **Task tracking:** Before spawning any subagent, create one task per subagent using TaskCreate. Mark all tasks `in_progress` when spawning. As each background agent returns, mark its task `completed`. This renders a live-updating checklist in the UI.
+- **Parallelism:** Spawn ALL subagents in a single message. Do NOT wait for one to finish before launching the next. Use `run_in_background: true` for every subagent.
+- **Output suppression:** Write exactly one line before spawning: `Running deep review…`. Write nothing else until all subagents have returned.
+- **Final output:** Prioritize findings by severity with concrete file/symbol references.
 
-**Model selection:**
-- Use `haiku` for exploratory/data-gathering subagents (branch context, dependency delta, file listings, git log, PR info)
-- Use `sonnet` for analysis subagents that require judgment (breaking changes, migration compatibility, test coverage, redundancy/dead-code, logic bugs, comment/param validation)
-- You MUST pass the `model` parameter on every Agent tool call. Never omit it. The value must match the table below exactly (`"haiku"` or `"sonnet"`). This is non-negotiable — subagents spawned without a model parameter are a bug.
+## Subagents
 
-**Parallelism:**
-- Spawn ALL subagents in a single message so they run concurrently. Do NOT wait for one to finish before launching the next.
-- Run data-gathering agents first (haiku) and pass their output into analysis agents (sonnet) only when there is a true dependency. If analysis can proceed from the diff alone, launch it immediately in parallel with the exploratory agents.
-- Use `run_in_background: true` for every subagent. Collect all results before synthesizing the final review.
+### context (haiku)
+**Task:**
+- Summarize branch purpose and scope of changes
+- Extract and list commit messages
+- Capture PR title, body, and any linked discussion
+**Output:** branch summary, PR context paragraph, changed file list
 
-**Output suppression:**
-- Do NOT narrate subagent launches, progress, or individual completions. No "Launching breaking-change agent…", no "context agent returned…".
-- Write exactly one text line before spawning: `Running deep review…`
-- Write nothing else until all subagents have returned. Then output the final review directly.
+---
 
-**Subagent prompt style:**
-- Write all subagent prompts in caveman mode: drop articles, filler, pleasantries, hedging. Fragments OK. Technical substance stays exact.
-- Final review output to the user is normal prose — caveman applies only to inter-agent communication.
+### deps (haiku)
+**Task:**
+- List every new package added and any version changes to existing packages
+- Note if a package is dev-only vs runtime
+**Output:** table of added/changed packages with old→new versions and dev/runtime classification
 
-**Subagent split:**
+---
 
-| Subagent | Model | Task |
-|---|---|---|
-| context | haiku | Branch name, commit messages vs main, PR title/body/discussion |
-| deps | haiku | New packages added, version changes |
-| breaking | sonnet | Breaking API/schema/interface changes |
-| migrations | sonnet | Migration compatibility and backwards compatibility |
-| tests | sonnet | Test coverage gaps per changed component |
-| redundancy | sonnet | Duplicate code, dead code, stale paths, unreachable branches |
-| logic | sonnet | Edge cases, bugs, logic errors |
-| comments-params | sonnet | Removed context comments, undocumented new params/configs/flags, param name/value validation |
+### breaking (sonnet)
+**Task:**
+- Identify changes to public APIs, exported interfaces, function signatures, and schema definitions that are not backwards-compatible
+- Flag removed or renamed exports, changed parameter types, and removed fields
+**Output:** list of breaking changes with file:line references and description of what breaks
 
-- If a PR exists, include PR title/body/discussion context in the review input.
-- If no PR exists, proceed with branch-only review and explicitly note that limitation.
-- Prioritize findings by severity and include concrete file/symbol references.
-- Prefer actionable findings over stylistic comments.
+---
+
+### migrations (sonnet)
+**Task:**
+- Find database migrations, schema changes, and data transformations
+- Check whether each migration is backwards-compatible (old code can run against new schema and vice versa)
+- Flag irreversible migrations or missing rollback paths
+**Output:** list of migrations with compatibility assessment and any rollback concerns
+
+---
+
+### tests (sonnet)
+**Task:**
+- For each changed component or code path, identify whether tests exist that cover the change
+- Flag missing unit tests, integration tests, and edge case coverage
+- Note if existing tests were deleted without replacement
+**Output:** per-component coverage assessment with specific gaps called out at file:line
+
+---
+
+### redundancy (sonnet)
+**Task:**
+- Find code that duplicates existing functionality elsewhere in the diff or codebase
+- Identify dead code, unreachable branches, and unused variables introduced by this diff
+- Flag old code paths that are logically superseded by a new path (e.g., old endpoint) but are neither removed nor marked deprecated
+**Output:** list of redundant/dead/stale code with file:line and description
+
+---
+
+### logic (sonnet)
+**Task:**
+- Find edge cases not handled by the new logic (off-by-one, null/empty inputs, concurrency, overflow, race conditions)
+- Identify outright bugs: wrong operator, incorrect conditional, missing await, etc.
+**Output:** list of logic issues with file:line, description of the problem, and suggested fix
+
+---
+
+### comments-params (sonnet)
+**Task:**
+- Flag removed comments that captured information not obvious from the code alone (hidden constraints, workarounds, subtle invariants)
+- Flag new parameters, config values, or flags that lack documentation when the information is non-obvious
+- For every newly introduced parameter, config value, or flag: validate the name and value are correct against source type definitions or official documentation. Never assume validity without evidence.
+**Output:** list of documentation gaps and param validation findings with file:line
+
+---
 
 ## Required Output Format
 
