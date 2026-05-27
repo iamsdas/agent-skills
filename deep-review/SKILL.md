@@ -17,6 +17,7 @@ Spawn all subagents defined below in a single message so they run concurrently. 
 - **Parallelism:** Spawn ALL subagents in a single message. Do NOT wait for one to finish before launching the next. Use `run_in_background: true` for every subagent.
 - **Output suppression:** Write exactly one line before spawning: `Running deep review…`. Write nothing else until all subagents have returned.
 - **Final output:** Prioritize findings by severity with concrete file/symbol references.
+- **Unused code severity cap:** Any finding (bug, logic error, missing test, etc.) in code identified as dead, unreachable, or unused MUST be capped at `[low]` severity. Do not mark errors in unused code as `[high]` or `[critical]`.
 
 ## Subagents
 
@@ -76,7 +77,18 @@ Spawn all subagents defined below in a single message so they run concurrently. 
 **Task:**
 - Find edge cases not handled by the new logic (off-by-one, null/empty inputs, concurrency, overflow, race conditions)
 - Identify outright bugs: wrong operator, incorrect conditional, missing await, etc.
-**Output:** list of logic issues with file:line, description of the problem, and suggested fix
+- If a bug or edge case is in dead, unreachable, or unused code, note that explicitly and do NOT escalate its severity
+**Output:** list of logic issues with file:line, description of the problem, suggested fix, and whether the affected code is live vs unused
+
+---
+
+### conventions (sonnet)
+**Task:**
+- Identify the conventions already established in the codebase: testing framework/package, assertion style, file naming, import style, error handling patterns, etc.
+- For every new test or feature file introduced in the diff, check whether it follows those same conventions
+- Flag deviations: e.g., new test uses a different testing library, new file uses a different naming scheme, new error handling diverges from the established pattern
+- Only flag genuine divergence from a clear existing convention — do not flag where no convention exists
+**Output:** list of convention violations with file:line, the established convention, and what the new code does instead
 
 ---
 
