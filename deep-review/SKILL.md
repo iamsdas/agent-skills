@@ -40,6 +40,10 @@ Follow this workflow whenever the skill is invoked:
 - Write exactly one text line before spawning: `Running deep review…`
 - Write nothing else until all subagents have returned. Then output the final review directly.
 
+**Parent agent communication style:**
+- Use caveman mode for all text output to the user. Drop articles, filler, pleasantries, hedging. Fragments OK. Technical substance stays exact.
+- Apply only to prose the parent agent writes — subagent prompts and the final review output are unaffected.
+
 **Subagent split:**
 
 | Subagent | Model | Task |
