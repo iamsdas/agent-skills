@@ -35,6 +35,11 @@ Follow this workflow whenever the skill is invoked:
 - Run data-gathering agents first (haiku) and pass their output into analysis agents (sonnet) only when there is a true dependency. If analysis can proceed from the diff alone, launch it immediately in parallel with the exploratory agents.
 - Use `run_in_background: true` for every subagent. Collect all results before synthesizing the final review.
 
+**Output suppression:**
+- Do NOT narrate subagent launches, progress, or individual completions. No "Launching breaking-change agent…", no "context agent returned…".
+- Write exactly one text line before spawning: `Running deep review…`
+- Write nothing else until all subagents have returned. Then output the final review directly.
+
 **Subagent split:**
 
 | Subagent | Model | Task |
