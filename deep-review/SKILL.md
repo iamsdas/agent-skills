@@ -21,7 +21,8 @@ Follow this workflow whenever the skill is invoked:
 9. Note new packages being added, if any.
 10. Find edge cases or bugs in logic.
 11. Check if any context comments were removed without a clear reason or if parameters/arguments lack documentation when added or updated. Flag cases where removed comments captured information not obvious from the code alone, and flag missing documentation on parameter additions or updates.
-12. Summarize with a final review.
+12. For any parameter, config value, or flag that is newly introduced in this diff, validate that the name and value are correct — check source code (type definitions, compiler errors) or look up official documentation (search online if necessary). Never assume a new parameter is valid without evidence.
+13. Summarize with a final review.
 
 ## Execution Pattern
 
@@ -33,6 +34,7 @@ Follow this workflow whenever the skill is invoked:
   - Redundancy, dead-code, and logic bug scan
   - Dependency delta review
   - Context comment removal scan
+  - Parameter/config validation (usage check + name/value correctness via source or docs)
 - If a PR exists, include PR title/body/discussion context in the review input.
 - If no PR exists, proceed with branch-only review and explicitly note that limitation.
 - Prioritize findings by severity and include concrete file/symbol references.
@@ -40,40 +42,58 @@ Follow this workflow whenever the skill is invoked:
 
 ## Required Output Format
 
-Use this structure:
+- **Omit any section entirely if there is nothing to report.** Do not write "None found" placeholders.
+- Always include the Summary section.
+- Use severity tags: `[critical]`, `[high]`, `[medium]`, `[low]`.
+- Include file and line references for every finding.
 
 ```markdown
-## Findings
-- [Severity] Finding with impact and location
+# Review: <branch or PR name>
 
-## Breaking Changes
-- None found / list with affected consumers
+<One sentence: what this branch does.>
 
-## Migrations and Backward Compatibility
-- Migration summary + compatibility verdict
+---
 
-## Testing Coverage
-- Changed area -> existing tests -> missing tests
+## 🔴 Critical / 🟠 High Priority
 
-## Redundant or Duplicate Changes
-- None found / list of overlaps
+> Only include if there are critical or high severity findings.
 
-## Dead Code and Replacement Paths
-- None found / list dead code
-- For replacement paths, confirm old path is removed or explicitly deprecated
+- **[critical] Title** — `file:line`
+  Impact and why it matters. What breaks or who is affected.
 
-## New Packages
-- None added / package + reason + risk note
+- **[high] Title** — `file:line`
+  Impact and why it matters.
 
-## Logic Edge Cases and Bugs
-- None found / list with reproduction idea
+---
 
-## Final Review Summary
-- Merge readiness and required follow-ups
+## 🟡 Needs Attention
+
+> Medium severity: logic edge cases, missing tests, deprecated paths not removed, removed context comments, etc.
+
+- **[medium] Title** — `file:line`
+  What the issue is and what to do about it.
+
+---
+
+## 🔵 Low / Informational
+
+> Low severity: style, minor redundancy, new packages, suggestions.
+
+- **[low] Title** — `file:line`
+  Note.
+
+---
+
+## Summary
+
+**Merge readiness:** Ready / Needs fixes / Blocked
+
+- <key finding or required action 1>
+- <key finding or required action 2>
 ```
 
 ## Quality Bar
 
 - Do not claim certainty without evidence from diffs, commits, or tests.
 - Flag assumptions explicitly.
-- If there are no issues, say so clearly and still report residual risk and test gaps.
+- Omit sections with nothing to report — a short, dense review is better than a padded one.
