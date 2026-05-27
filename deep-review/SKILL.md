@@ -29,6 +29,7 @@ Follow this workflow whenever the skill is invoked:
 **Model selection:**
 - Use `haiku` for exploratory/data-gathering subagents (branch context, dependency delta, file listings, git log, PR info)
 - Use `sonnet` for analysis subagents that require judgment (breaking changes, migration compatibility, test coverage, redundancy/dead-code, logic bugs, comment/param validation)
+- You MUST pass the `model` parameter on every Agent tool call. Never omit it. The value must match the table below exactly (`"haiku"` or `"sonnet"`). This is non-negotiable — subagents spawned without a model parameter are a bug.
 
 **Parallelism:**
 - Spawn ALL subagents in a single message so they run concurrently. Do NOT wait for one to finish before launching the next.
