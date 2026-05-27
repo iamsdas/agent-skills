@@ -22,37 +22,40 @@ Use this skill when:
 - The user asks "what is causing this?" or similar diagnosis questions.
 - The user has not asked for implementation steps, fixes, or refactors yet.
 
-Prefer this skill by default when the input is primarily diagnosis-oriented (logs/errors or behavioral bug reports) and no implementation is requested. DO NOT USE this skill for follow-up questions by the user or general questions.
+Prefer this skill by default when the input is primarily diagnosis-oriented (logs/errors or behavioral bug reports) and no implementation is requested.
+
+## When Not To Use
+
+DO NOT USE this skill for follow-up questions by the user or general questions during a conversation.
 
 ## Output Format
 
-Always structure the response in this order:
+Always structure the response using these sections in order:
 
-0. **Branch context (when applicable)**
-   - Check whether the user is currently on `main`.
-   - If not on `main`, ask whether the issue is related to their current branch work.
-   - If yes, add a short `Branch context` section and use that context to guide diagnosis.
-   - If no, continue with normal diagnosis flow without branch-specific assumptions.
+---
 
-1. **End-user impact (high level)**
-   - Describe what a user sees.
-   - List likely trigger paths (how they can end up triggering it).
-   - State the practical result/failure mode.
+**Branch context** *(omit this section entirely if on `main` or if the issue is unrelated to branch changes)*
+One sentence on what changed on this branch that is relevant to the issue.
 
-2. **Likely code cause (exact parts)**
-   - Point to precise files/functions/branches.
-   - Quote the minimal relevant snippet(s).
-   - Explain why those lines are likely responsible based on the error/log evidence.
+---
 
-3. **Confidence and assumptions**
-   - Mark confidence (high/medium/low).
-   - List assumptions made from incomplete logs or incomplete reproduction details.
+**What the user experiences**
+Two to four sentences in plain language: what breaks, when it breaks, and how severe it is. No jargon. Write as if explaining to a product manager.
 
-4. **Testing coverage for this issue**
-   - Run a test-coverage consolidation subagent for the affected feature/code path.
-   - Summarize what tests currently exist (unit/integration/e2e or equivalent).
-   - Call out the gap in test suite coverage that allowed the issue through.
-   - State the specific test that should have been present to catch this issue.
+---
+
+**Root cause**
+One focused paragraph identifying the exact file, function, and condition responsible. Quote the minimal relevant snippet inline. Explain directly why those specific lines cause the observed failure — no hedging unless evidence is genuinely weak.
+
+---
+
+**Confidence** — `high` / `medium` / `low`
+One sentence on confidence level. If medium or low, one sentence on what's missing or assumed.
+
+---
+
+**Test coverage**
+Two to three sentences: what tests currently cover this path, what's missing, and the exact test that should have caught this. Be specific — name the test file or describe the test case precisely.
 
 ## Investigation Workflow
 
