@@ -35,10 +35,10 @@ Use this skill to prevent premature implementation planning. First align on prod
    - Use AskUserQuestion to ask if the scope is complete, with options like "Yes, scope is complete" and "No, keep refining".
    - If user does not confirm, continue refinement.
 
-4. Output the final ticket:
-   - Once the user confirms the scope is complete, produce the final ticket using the Notion Task Template below.
+4. Output the final scope document:
+   - Once the user confirms the scope is complete, produce the final document using the template below.
    - Output it as a clean markdown block the user can copy directly (no preamble, no trailing commentary).
-   - Do NOT invoke the handoff skill. Do NOT switch to planning mode. Do NOT write implementation steps.
+   - Do NOT switch to planning mode. Do NOT write implementation steps.
 
 ## Guardrails
 
@@ -86,22 +86,24 @@ Once confirmed, output ONLY the following block — no intro sentence, no "here 
 ```markdown
 # <Title>
 
-## What & Why
+## Context
 
-<2–4 sentences. What is this task? What is broken or missing today, and why does it matter? Give enough context that a planning agent can reason about the problem without needing to ask follow-up questions.>
+<2–4 sentences. What is happening today, why is it a problem, and what is changing? Give enough background that someone unfamiliar with the request can understand the motivation without needing to ask follow-up questions.>
 
-## Desired Behavior
+## What's Changing
 
-<What should be true when this is done? Describe from the user's perspective — what they can do, see, or experience that they couldn't before.>
+<Describe the delta — what behavior, data, or experience is different after this change. Focus on the user-visible or system-visible shift, not implementation details.>
+
+## Affected Flows
+
+<List the user journeys or system flows that will behave differently after this change. For each, briefly describe how the flow changes.>
+
+- **<Flow name>**: <how is it affected>
+- **<Flow name>**: <how is it affected>
 
 ## Constraints
 
 - <anything that must stay the same, must not break, or limits the solution space>
-
-## Acceptance Criteria
-
-- [ ] <specific, testable outcome>
-- [ ] <edge case or error condition that must be handled>
 
 ## Out of Scope
 
