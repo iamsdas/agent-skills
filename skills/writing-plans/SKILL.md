@@ -23,6 +23,24 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
 
+## Codebase Exploration
+
+Understand relevant existing code and patterns at both high and low levels. Launch 2-3 code-explorer agents in parallel. Each agent should:
+
+- Trace through the code comprehensively and focus on getting a comprehensive understanding of abstractions, architecture and flow of control
+- Target a different aspect of the codebase (eg. similar features, high level understanding, architectural understanding, user experience, etc)
+- Include a list of 5-10 key files to read
+
+Present comprehensive summary of findings and patterns discovered
+
+## Architecture Design
+
+Design multiple implementation approaches with different trade-offs
+
+- Launch 2-3 code-architect agents in parallel with different focuses: minimal changes (smallest change, maximum reuse), clean architecture (maintainability, elegant abstractions), or pragmatic balance (speed + quality).
+- Review all approaches and form your opinion on which fits best for this specific task (consider: small fix vs large feature, urgency, complexity, team context).
+- Present to user: brief summary of each approach, trade-offs comparison, your recommendation with reasoning, concrete implementation differences.
+
 ## File Structure
 
 Before defining tasks, map out which files will be created or modified and what each one is responsible for. This is where decomposition decisions get locked in.
