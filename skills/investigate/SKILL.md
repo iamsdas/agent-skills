@@ -51,6 +51,11 @@ Go deep: don't stop at "X is out of sync" or "Y is missing." Explain the chain �
 
 ---
 
+**Relevant commits** *(omit if no recent commits are directly related)*
+Bullet list of commits that introduced or relate to the issue: `hash` — Author, Date — summary. One sentence on what each commit changed and why it's relevant.
+
+---
+
 **Confidence** — `high` / `medium` / `low`
 One sentence on confidence level. If medium or low, one sentence on what's missing or assumed.
 
@@ -83,7 +88,14 @@ Two to three sentences: what tests currently cover this path, what's missing, an
    - Cite only the minimal root-cause snippet.
    - Do not cite logging lines, exception construction/raising lines, or wrapper handlers unless they are the direct root cause.
 
-5. Consolidate test coverage with a subagent:
+5. Check git history for relevant commits using a subagent:
+   - Search recent commits for changes to the files/symbols identified in the root cause.
+   - Look for commits that: introduced the bug, modified the affected logic, or touched related code paths.
+   - Include the commit hash, author, date, and one-line summary for each relevant commit.
+   - Note if the issue was introduced in a recent commit vs. long-standing behavior.
+   - Incorporate findings into the **Root cause** section or add a brief **Relevant commits** sub-section if noteworthy.
+
+6. Consolidate test coverage with a subagent:
    - Launch the `feature-test-coverage-analyst` subagent once likely affected files/symbols are identified.
    - Ask it to return:
      - Existing tests covering this behavior, grouped by test type.
@@ -91,7 +103,7 @@ Two to three sentences: what tests currently cover this path, what's missing, an
      - The most appropriate "should-have-existed" test that would have caught this issue earlier.
    - Incorporate this output into the final `Testing coverage for this issue` section.
 
-6. Return diagnosis:
+7. Return diagnosis:
    - Do not implement fixes.
    - If needed, suggest 1-2 next validation checks briefly.
 
