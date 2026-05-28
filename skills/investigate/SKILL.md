@@ -47,6 +47,8 @@ Two to four sentences in plain language: what breaks, when it breaks, and how se
 **Root cause**
 One focused paragraph identifying the exact file, function, and condition responsible. Quote the minimal relevant snippet inline. Explain directly why those specific lines cause the observed failure — no hedging unless evidence is genuinely weak.
 
+Go deep: don't stop at "X is out of sync" or "Y is missing." Explain the chain — what triggered the state, why the system enforces it this way, and what invariant was violated. For example: not just "uv.lock is out of sync" but *why* it got out of sync (e.g. pyproject.toml was modified without re-running `uv lock`, and CI passes `--locked` which hard-fails on drift). The root cause is the action or omission that created the bad state, not the symptom that surfaced it.
+
 ---
 
 **Confidence** — `high` / `medium` / `low`
