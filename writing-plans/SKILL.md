@@ -7,16 +7,17 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 ## Overview
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, where to look for reference, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
+
+**No code blocks in plans.** Point to where things are instead — exact file paths and line numbers. The engineer reads the code; the plan tells them where to look and what to do.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
 **Context:** If working in an isolated worktree, it should have been created via the `using-git-worktrees` skill at execution time.
 
-**Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
-- (User preferences for plan location override this default)
+**Plan Mode:** Switch to plan mode via `EnterPlanMode` before writing the plan.
 
 ## Scope Check
 
@@ -72,23 +73,16 @@ This structure informs the task decomposition. Each task should produce self-con
 
 - [ ] **Step 1: Write the failing test**
 
-```python
-def test_specific_behavior():
-    result = function(input)
-    assert result == expected
-```
+Add a test to `tests/path/test.py` modeled after the existing test at `tests/path/test.py:45`. It should assert that `function(input)` returns `expected`.
 
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: FAIL with "function not defined"
 
-- [ ] **Step 3: Write minimal implementation**
+- [ ] **Step 3: Implement**
 
-```python
-def function(input):
-    return expected
-```
+Add `function` to `src/path/file.py` following the pattern at `src/path/file.py:78`. See `src/path/other.py:12-30` for how similar logic is handled.
 
 - [ ] **Step 4: Run test to verify it passes**
 
@@ -97,10 +91,7 @@ Expected: PASS
 
 - [ ] **Step 5: Commit**
 
-```bash
-git add tests/path/test.py src/path/file.py
-git commit -m "feat: add specific feature"
-```
+`git add tests/path/test.py src/path/file.py && git commit -m "feat: add specific feature"`
 ````
 
 ## No Placeholders
@@ -108,14 +99,13 @@ git commit -m "feat: add specific feature"
 Every step must contain the actual content an engineer needs. These are **plan failures** — never write them:
 - "TBD", "TODO", "implement later", "fill in details"
 - "Add appropriate error handling" / "add validation" / "handle edge cases"
-- "Write tests for the above" (without actual test code)
-- "Similar to Task N" (repeat the code — the engineer may be reading tasks out of order)
-- Steps that describe what to do without showing how (code blocks required for code steps)
-- References to types, functions, or methods not defined in any task
+- "Write tests for the above" without pointing to a specific file and reference pattern
+- "Similar to Task N" — repeat the pointer, the engineer may be reading tasks out of order
+- Steps that say what to do without pointing to where (exact file:line references required)
+- Code blocks — describe what to build and where to look, not what to write
 
 ## Remember
-- Exact file paths always
-- Complete code in every step — if a step changes code, show the code
+- Exact file paths and line numbers always — point to where things are, never write them out
 - Exact commands with expected output
 - DRY, YAGNI, TDD, frequent commits
 
@@ -129,24 +119,13 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 **3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
 
+**4. Clean code:** Is any logic in the plan reimplementing something that already exists in the codebase? Search for existing utilities, helpers, or patterns before pointing the engineer to write new ones.
+
 If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
 ## Execution Handoff
 
-After saving the plan, offer execution choice:
+After saving the plan, dispatch a fresh subagent per task, review between tasks, fast iteration.
 
-**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Two execution options:**
-
-**1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
-
-**2. Inline Execution** - Execute tasks in this session using executing-plans, batch execution with checkpoints
-
-**Which approach?"**
-
-**If Subagent-Driven chosen:**
 - **REQUIRED SUB-SKILL:** Use subagent-driven-development
 - Fresh subagent per task + two-stage review
-
-**If Inline Execution chosen:**
-- **REQUIRED SUB-SKILL:** Use executing-plans
-- Batch execution with checkpoints for review
