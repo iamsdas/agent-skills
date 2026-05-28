@@ -13,62 +13,85 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **No code blocks in plans.** Point to where things are instead — exact file paths and line numbers. The engineer reads the code; the plan tells them where to look and what to do.
 
-**Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
+---
 
-**Context:** If working in an isolated worktree, it should have been created via the `using-git-worktrees` skill at execution time.
+## Execution Rules
 
-**Plan Mode:** Switch to plan mode via `EnterPlanMode` before writing the plan.
+- **Announce:** Write exactly one line before starting: "I'm using the writing-plans skill to create the implementation plan."
+- **Task tracking:** Before starting, create one task per phase using TaskCreate. Mark each task `in_progress` when beginning it, `completed` when done. This renders a live-updating checklist for the user.
+- **Sequential:** Run phases in order. Each must complete before the next begins.
+- **Subagent driven execution:** use the subagent-driven-development skill for execution once user is ready.
 
-## Scope Check
+---
 
-If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
+## Phases
 
-## Codebase Exploration
+### 1. Scope Check
 
-Understand relevant existing code and patterns at both high and low levels. Launch 2-3 code-explorer agents in parallel. Each agent should:
+**Task:** Determine if the spec covers multiple independent subsystems. Each plan should produce working, testable software on its own.
 
-- Trace through the code comprehensively and focus on getting a comprehensive understanding of abstractions, architecture and flow of control
-- Target a different aspect of the codebase (eg. similar features, high level understanding, architectural understanding, user experience, etc)
-- Include a list of 5-10 key files to read
+**Output:** Confirm single plan, or propose a split into sub-plans with one per subsystem.
 
-Present comprehensive summary of findings and patterns discovered
+---
 
-## Architecture Design
+### 2. Codebase Exploration
 
-Design multiple implementation approaches with different trade-offs
+**Task:** Launch 2-3 code-explorer agents in parallel. Each targets a different aspect (e.g. similar features, high-level architecture, control flow). Each reads 5-10 key files and traces abstractions end-to-end.
 
-- Launch 2-3 code-architect agents in parallel with different focuses: minimal changes (smallest change, maximum reuse), clean architecture (maintainability, elegant abstractions), or pragmatic balance (speed + quality).
-- Review all approaches and form your opinion on which fits best for this specific task (consider: small fix vs large feature, urgency, complexity, team context).
-- Present to user: brief summary of each approach, trade-offs comparison, your recommendation with reasoning, concrete implementation differences.
+**Output:** Comprehensive summary of existing patterns and architecture relevant to this task.
 
-## File Structure
+---
 
-Before defining tasks, map out which files will be created or modified and what each one is responsible for. This is where decomposition decisions get locked in.
+### 3. Architecture Design
 
-- Design units with clear boundaries and well-defined interfaces. Each file should have one clear responsibility.
-- You reason best about code you can hold in context at once, and your edits are more reliable when files are focused. Prefer smaller, focused files over large ones that do too much.
-- Files that change together should live together. Split by responsibility, not by technical layer.
-- In existing codebases, follow established patterns. If the codebase uses large files, don't unilaterally restructure - but if a file you're modifying has grown unwieldy, including a split in the plan is reasonable.
+**Task:** Launch 2-3 code-architect agents in parallel with different focuses — minimal changes (smallest change, maximum reuse), clean architecture (maintainability, elegant abstractions), or pragmatic balance (speed + quality). Review all approaches and form a recommendation.
 
-This structure informs the task decomposition. Each task should produce self-contained changes that make sense independently.
+**Output:** Brief summary of each approach, trade-offs comparison, and recommendation with reasoning. Present to user and wait for confirmation before continuing.
 
-## Bite-Sized Task Granularity
+---
 
-**Each step is one action (2-5 minutes):**
-- "Write the failing test" - step
-- "Run it to make sure it fails" - step
-- "Implement the minimal code to make the test pass" - step
-- "Run the tests and make sure they pass" - step
-- "Commit" - step
+### 4. File Structure
 
-## Plan Document Header
+**Task:** Map out all files to create or modify. Each file gets one clear responsibility. Follow established codebase patterns. Files that change together should live together — split by responsibility, not technical layer.
 
-**Every plan MUST start with this header:**
+**Output:** File map with each file's responsibility. This locks in decomposition decisions.
+
+---
+
+### 5. Write the Plan
+
+**Task:** Write the full plan document to a temp file (e.g. `/tmp/plan.md`) using the output format below.
+
+**Output:** Plan saved to temp file.
+
+---
+
+### 6. Self-Review
+
+**Task:** Read the temp file and check it against the spec for: (1) coverage gaps — every requirement maps to a task, (2) placeholder violations — no TBD/TODO/vague steps, (3) type consistency — names match across tasks, (4) clean code — no reimplementing existing utilities. Edit the file directly to fix issues.
+
+**Output:** All gaps fixed. Plan file is complete and accurate.
+
+---
+
+### 7. Present for Execution
+
+**Task:** Enter plan mode via `EnterPlanMode`. Present the final plan to the user with the message:
+
+> Plan is ready at `<path>`. To execute, invoke the **subagent-driven-development** skill.
+
+**Output:** User approves and exits plan mode to begin execution.
+
+---
+
+## Output Format
+
+### Plan Document Header
+
+Every plan MUST start with this header:
 
 ```markdown
 # [Feature Name] Implementation Plan
-
-> **For agentic workers:** REQUIRED SUB-SKILL: Use subagent-driven-development (recommended) or executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -79,7 +102,9 @@ This structure informs the task decomposition. Each task should produce self-con
 ---
 ```
 
-## Task Structure
+### Task Structure
+
+Each task follows this format. Tasks are bite-sized — each step is one action (2-5 minutes):
 
 ````markdown
 ### Task N: [Component Name]
@@ -112,9 +137,10 @@ Expected: PASS
 `git add tests/path/test.py src/path/file.py && git commit -m "feat: add specific feature"`
 ````
 
-## No Placeholders
+### Rules
 
 Every step must contain the actual content an engineer needs. These are **plan failures** — never write them:
+
 - "TBD", "TODO", "implement later", "fill in details"
 - "Add appropriate error handling" / "add validation" / "handle edge cases"
 - "Write tests for the above" without pointing to a specific file and reference pattern
@@ -122,28 +148,8 @@ Every step must contain the actual content an engineer needs. These are **plan f
 - Steps that say what to do without pointing to where (exact file:line references required)
 - Code blocks — describe what to build and where to look, not what to write
 
-## Remember
-- Exact file paths and line numbers always — point to where things are, never write them out
+Always use:
+
+- Exact file paths and line numbers — point to where things are, never write them out
 - Exact commands with expected output
 - DRY, YAGNI, TDD, frequent commits
-
-## Self-Review
-
-After writing the complete plan, look at the spec with fresh eyes and check the plan against it. This is a checklist you run yourself — not a subagent dispatch.
-
-**1. Spec coverage:** Skim each section/requirement in the spec. Can you point to a task that implements it? List any gaps.
-
-**2. Placeholder scan:** Search your plan for red flags — any of the patterns from the "No Placeholders" section above. Fix them.
-
-**3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
-
-**4. Clean code:** Is any logic in the plan reimplementing something that already exists in the codebase? Search for existing utilities, helpers, or patterns before pointing the engineer to write new ones.
-
-If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
-
-## Execution Handoff
-
-After saving the plan, dispatch a fresh subagent per task, review between tasks, fast iteration.
-
-- **REQUIRED SUB-SKILL:** Use subagent-driven-development
-- Fresh subagent per task + two-stage review
