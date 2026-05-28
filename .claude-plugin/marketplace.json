@@ -1,0 +1,14 @@
+{
+  "name": "surya-local",
+  "owner": {
+    "name": "Suryashankar Das",
+    "email": "surya@fused.io"
+  },
+  "plugins": [
+    {
+      "name": "surya-skills",
+      "description": "Personal Claude Code skills plugin",
+      "source": "./plugins/surya-skills"
+    }
+  ]
+}
