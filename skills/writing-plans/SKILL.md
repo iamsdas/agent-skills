@@ -77,9 +77,7 @@ Every plan MUST start with this header:
 
 **Goal:** [One sentence describing what this builds]
 
-**Architecture:** [2-3 sentences about approach]
-
-**Tech Stack:** [Key technologies/libraries]
+**Approach:** [2-3 sentences about approach]
 
 ---
 ```
