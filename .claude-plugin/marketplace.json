@@ -8,7 +8,7 @@
     {
       "name": "surya-skills",
       "description": "Personal Claude Code skills plugin",
-      "source": "./plugins/surya-skills"
+      "source": "./"
     }
   ]
 }
