@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# PostToolUse hook: auto-review plan files written to .claude/plans/
+
+set -euo pipefail
+
+# Guard against recursive invocation (when this hook spawns `claude`)
+if [[ -n "${CLAUDE_PLAN_REVIEW_RUNNING:-}" ]]; then
+    exit 0
+fi
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# Read PostToolUse stdin JSON: {"tool_name": ..., "tool_input": {"file_path": ..., "content": ...}}
+STDIN_CONTENT=$(cat)
+
+# Extract file_path and content from tool_input
+if command -v jq &>/dev/null; then
+    FILE_PATH=$(printf '%s' "$STDIN_CONTENT" | jq -r '.tool_input.file_path // empty' 2>/dev/null || true)
+    PLAN_CONTENT=$(printf '%s' "$STDIN_CONTENT" | jq -r '.tool_input.content // empty' 2>/dev/null || true)
+else
+    FILE_PATH=$(printf '%s' "$STDIN_CONTENT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('tool_input',{}).get('file_path',''))" 2>/dev/null || true)
+    PLAN_CONTENT=$(printf '%s' "$STDIN_CONTENT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('tool_input',{}).get('content',''))" 2>/dev/null || true)
+fi
+
+# Only run for files written to a .claude/plans/ directory
+if [[ -z "${FILE_PATH:-}" ]] || [[ "$FILE_PATH" != *"/.claude/plans/"* ]]; then
+    exit 0
+fi
+
+if [[ -z "${PLAN_CONTENT:-}" ]]; then
+    exit 0
+fi
+
+# Load reviewer instructions
+REVIEWER_INSTRUCTIONS=$(cat "${PLUGIN_ROOT}/skills/writing-plans/plan-document-reviewer-prompt.md" 2>/dev/null || true)
+if [[ -z "${REVIEWER_INSTRUCTIONS:-}" ]]; then
+    exit 0
+fi
+
+REVIEW_PROMPT="$(cat <<EOF
+You are reviewing a plan document. Use the following reviewer instructions, then apply them to the plan below.
+
+${REVIEWER_INSTRUCTIONS}
+
+Here is the plan to review:
+
+${PLAN_CONTENT}
+EOF
+)"
+
+# Run the review via claude CLI (non-interactive)
+REVIEW_OUTPUT=$(CLAUDE_PLAN_REVIEW_RUNNING=1 printf '%s' "$REVIEW_PROMPT" | claude -p 2>/dev/null || true)
+if [[ -z "${REVIEW_OUTPUT:-}" ]]; then
+    exit 0
+fi
+
+# Escape string for JSON embedding
+escape_for_json() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\n'/\\n}"
+    s="${s//$'\r'/\\r}"
+    s="${s//$'\t'/\\t}"
+    printf '%s' "$s"
+}
+
+FULL_REVIEW="Plan auto-review — address any issues before calling ExitPlanMode:"$'\n\n'"${REVIEW_OUTPUT}"
+CONTEXT=$(escape_for_json "$FULL_REVIEW")
+
+# Output context injection in platform-aware format (matches session-start pattern)
+if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
+    printf '{\n  "additional_context": "%s"\n}\n' "$CONTEXT"
+elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -z "${COPILOT_CLI:-}" ]; then
+    printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "PostToolUse",\n    "additionalContext": "%s"\n  }\n}\n' "$CONTEXT"
+else
+    printf '{\n  "additionalContext": "%s"\n}\n' "$CONTEXT"
+fi
+
+exit 0

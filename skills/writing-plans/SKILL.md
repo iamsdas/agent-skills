@@ -58,27 +58,9 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 ---
 
-### 5. Write the Plan
+### 5. Present for Execution
 
-**Task:** Write the full plan document to a temp file (e.g. `/tmp/plan.md`) using the output format below.
-
-**Output:** Plan saved to temp file.
-
----
-
-### 6. Self-Review
-
-**Task:** Read the temp file and check it against the spec for: (1) coverage gaps — every requirement maps to a task, (2) placeholder violations — no TBD/TODO/vague steps, (3) type consistency — names match across tasks, (4) clean code — no reimplementing existing utilities. Edit the file directly to fix issues.
-
-**Output:** All gaps fixed. Plan file is complete and accurate.
-
----
-
-### 7. Present for Execution
-
-**Task:** Enter plan mode via `EnterPlanMode`. Present the final plan to the user with the message:
-
-> Plan is ready at `<path>`. To execute, invoke the **subagent-driven-development** skill.
+**Task:** Enter plan mode via `EnterPlanMode`. Write the full plan document directly to the plan file path provided by plan mode (shown in the plan mode system message). A review hook fires automatically after the Write — address any feedback before calling `ExitPlanMode`.
 
 **Output:** User approves and exits plan mode to begin execution.
 
