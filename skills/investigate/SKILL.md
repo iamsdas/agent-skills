@@ -83,26 +83,20 @@ Two to three sentences: what tests currently cover this path, what's missing, an
    - Identify common trigger scenarios.
    - Distinguish hard failures vs partial degradation.
 
-4. Map signal to code using a `code-explorer` subagent:
-   - Find the exact symbol/function and smallest branch/condition causing the behavior.
-   - Cite only the minimal root-cause snippet.
-   - Do not cite logging lines, exception construction/raising lines, or wrapper handlers unless they are the direct root cause.
+4. Dispatch two `code-explorer` subagents **in parallel** (single message):
+   - **Root-cause explorer:** Find the exact symbol/function and smallest branch/condition causing the behavior. Cite only the minimal root-cause snippet. Do not cite logging lines, exception construction/raising lines, or wrapper handlers unless they are the direct root cause.
+   - **Git history explorer:** Search recent commits for changes to the files/symbols identified from the signal. Look for commits that introduced the bug, modified the affected logic, or touched related code paths. Include commit hash, author, date, and one-line summary. Note if the issue was introduced recently vs. long-standing.
 
-5. Check git history for relevant commits using a `code-explorer` subagent:
-   - Search recent commits for changes to the files/symbols identified in the root cause.
-   - Look for commits that: introduced the bug, modified the affected logic, or touched related code paths.
-   - Include the commit hash, author, date, and one-line summary for each relevant commit.
-   - Note if the issue was introduced in a recent commit vs. long-standing behavior.
-   - Incorporate findings into the **Root cause** section or add a brief **Relevant commits** sub-section if noteworthy.
+   Incorporate both results: root-cause snippet into **Root cause**, commit findings into **Relevant commits**.
 
-6. Consolidate test coverage with a `tests-analyzer` subagent:
+5. Consolidate test coverage with a `tests-analyzer` subagent (dispatch after step 4 returns affected files):
    - Launch once likely affected files/symbols are identified. Pass the affected file paths and the diagnosed root cause as context.
    - Ask it to return:
      - Existing tests covering this behavior, grouped by test type.
      - The most appropriate "should-have-existed" test that would have caught this issue earlier.
    - Incorporate this output into the final `Testing coverage for this issue` section.
 
-7. Return diagnosis:
+6. Return diagnosis:
    - Do not implement fixes.
    - If needed, suggest 1-2 next validation checks briefly.
 

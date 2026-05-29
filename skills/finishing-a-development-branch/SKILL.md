@@ -252,44 +252,6 @@ git worktree prune  # Self-healing: clean up any stale registrations
 
 Quality scan runs before all options — always advisory, never blocking.
 
-## Common Mistakes
-
-**Skipping test verification**
-- **Problem:** Merge broken code, create failing PR
-- **Fix:** Always verify tests before offering options
-
-**Open-ended questions**
-- **Problem:** "What should I do next?" is ambiguous
-- **Fix:** Present exactly 4 structured options (or 3 for detached HEAD)
-
-**Cleaning up worktree for Option 2**
-- **Problem:** Remove worktree user needs for PR iteration
-- **Fix:** Only cleanup for Options 1 and 4
-
-**Deleting branch before removing worktree**
-- **Problem:** `git branch -d` fails because worktree still references the branch
-- **Fix:** Merge first, remove worktree, then delete branch
-
-**Running git worktree remove from inside the worktree**
-- **Problem:** Command fails silently when CWD is inside the worktree being removed
-- **Fix:** Always `cd` to main repo root before `git worktree remove`
-
-**Cleaning up harness-owned worktrees**
-- **Problem:** Removing a worktree the harness created causes phantom state
-- **Fix:** Only clean up worktrees under `.worktrees/`, `worktrees/`, or `~/.config/superpowers/worktrees/`
-
-**No confirmation for discard**
-- **Problem:** Accidentally delete work
-- **Fix:** Require typed "discard" confirmation
-
-**Dispatching quality subagents sequentially**
-- **Problem:** Doubles wall-clock time of the quality scan
-- **Fix:** Dispatch all applicable subagents in a single message
-
-**Blocking on quality scan findings**
-- **Problem:** User cannot proceed until findings are resolved — not the intent
-- **Fix:** Quality scan is always advisory; always proceed to the options menu
-
 ## Red Flags
 
 **Never:**
