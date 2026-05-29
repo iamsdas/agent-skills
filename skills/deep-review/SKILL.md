@@ -13,7 +13,7 @@ Spawn all subagents defined below in a single message so they run concurrently. 
 ## Execution Rules
 
 - **Model parameter:** Named agents (`subagent_type` specified) define their own model — do not pass a `model` parameter. General-purpose agents (no `subagent_type`) MUST have an explicit `model` parameter. Omitting model on a general-purpose call is a bug.
-- **Task tracking:** Before spawning any subagent, create one task per subagent using TaskCreate. Mark all tasks `in_progress` when spawning. As each background agent returns, mark its task `completed`. This renders a live-updating checklist in the UI.
+- **Task tracking:** Before spawning any subagent, create one task per **applicable** subagent (after triage) using TaskCreate. Mark all tasks `in_progress` when spawning. As each background agent returns, mark its task `completed`. This renders a live-updating checklist in the UI.
 - **Parallelism:** Spawn ALL subagents in a single message. Do NOT wait for one to finish before launching the next. Use `run_in_background: true` for every subagent.
 - **Triage (before spawning):** Collect `CHANGED_FILES` and `DIFF_CONTENT` via `git diff` (see Triage section below). Evaluate the rule table to determine which subagents to spawn. Then spawn only the applicable set — all in a single message with `run_in_background: true`.
 - **Output suppression:** Write exactly one line before spawning: `Running deep review…` (after triage is complete). Write nothing else until all subagents have returned.
@@ -39,13 +39,13 @@ Evaluate each subagent against these rules:
 | `redundancy` | ✓ | — |
 | `logic-and-conventions` | ✓ | — |
 | `deps` | — | CHANGED_FILES includes a package manifest or lock file: `package.json`, `bun.lockb`, `yarn.lock`, `package-lock.json`, `Cargo.toml`, `Cargo.lock`, `requirements.txt`, `pyproject.toml`, `go.mod`, `go.sum`, `pom.xml`, `*.gemspec` |
-| `breaking` | — | DIFF_CONTENT contains exported/public symbol changes: `export `, `pub fn`, `pub struct`, `pub enum`, REST route definitions, GraphQL schema changes, or modified interface/type files |
+| `breaking` | — | DIFF_CONTENT has removed or changed exported/public symbols: diff lines matching `-.*export `, `-.*interface `, `-.*type `, `-.*pub fn`, `-.*pub struct`, `-.*pub enum`; or CHANGED_FILES includes API route definition files or GraphQL schema files |
 | `migrations` | — | CHANGED_FILES includes paths containing `migration`, `schema`, `.sql`, `alembic`, `prisma`, or a dedicated `db/` directory |
 | `silent-failures` | — | DIFF_CONTENT contains error-handling patterns: `try`, `catch`, `except`, `rescue`, `.catch(`, `handleError`, `onError`, `Result<`, `Err(` |
-| `comments-params` | — | DIFF_CONTENT adds new function parameters, config flags, env vars, or comment lines (`+//`, `+#`, `+/*`, `+ *`) |
-| `types` | — | DIFF_CONTENT contains type/interface/struct definitions: TypeScript `interface ` or `type `, Python `dataclass` or `TypedDict`, Go `type X struct`, Rust `struct` or `enum` |
+| `comments-params` | — | DIFF_CONTENT adds or removes comment lines (`+//`, `-//`, `+#`, `-#`, `+/*`, `-/*`, `+ *`, `- *`), or adds new function parameters, config flags, or env vars |
+| `types` | — | DIFF_CONTENT contains type definition patterns: `interface `, `type .* =`, `dataclass`, `TypedDict`, `type .* struct`, `struct `, `enum ` (check for these on `+` diff lines — added type definitions) |
 
-Spawn only the subagents whose condition is met. After the "Running deep review…" line, add a note listing any skipped subagents, e.g.: `(skipping: deps, migrations, types — not applicable to this diff)`. If no subagents are skipped, omit this note.
+Spawn only the subagents whose condition is met. Write the skipped-subagents note on the line immediately after "Running deep review…" — this note precedes the output suppression window. Example: `(skipping: deps, migrations, types — not applicable to this diff)`. If no subagents are skipped, omit this note.
 
 ## Subagents
 
