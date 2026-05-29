@@ -2,7 +2,7 @@
 name: tests-analyzer
 description: Use this agent when you need to analyze test coverage quality and completeness for any scope — a feature, a code path, a pull request, or a bug investigation. Identifies critical gaps, brittle tests, missing edge cases, and untested error paths.
 tools: Glob, Grep, LS, Read, NotebookRead, WebFetch, TodoWrite, WebSearch, BashOutput, LSP
-model: inherit
+model: sonnet
 color: cyan
 ---
 
