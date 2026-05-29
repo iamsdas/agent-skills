@@ -93,7 +93,7 @@ Evaluate the already-collected `CHANGED_FILES` and `DIFF_CONTENT` against these 
 
 - **`comment-analyzer`** — pass CHANGED_FILES (read their content). Prompt: *"Review the changed files for CRITICAL comment issues only — comments that are factually wrong or actively misleading about what the code does. Ignore missing comments, style, wording preferences, and minor inaccuracies. If no critical issues exist, say 'No critical comment issues found' and stop. Return at most 3 findings: file:line, what the comment says vs what the code actually does."*
 
-**Render findings** above the options menu once all three return:
+**Render findings** above the options menu once all spawned agents return:
 
 - Intermix all findings sorted by severity: `[CRITICAL]` → `[HIGH]` → `[gap:9+]` → `[gap:7-8]` → `[comment]`
 - Cap at 6 items total; if more: `(+N more — run /deep-review for full report)`
@@ -282,7 +282,7 @@ Quality scan runs before all options — always advisory, never blocking.
 
 **Dispatching quality subagents sequentially**
 - **Problem:** Doubles wall-clock time of the quality scan
-- **Fix:** Dispatch all three in a single message
+- **Fix:** Dispatch all applicable subagents in a single message
 
 **Blocking on quality scan findings**
 - **Problem:** User cannot proceed until findings are resolved — not the intent
@@ -300,7 +300,7 @@ Quality scan runs before all options — always advisory, never blocking.
 - Run `git worktree remove` from inside the worktree
 - Block progression to the options menu based on quality scan output
 - Print a "no issues found" success message from the quality scan (false confidence)
-- Dispatch quality subagents sequentially — all three must go in one message
+- Dispatch quality subagents sequentially — all applicable subagents must go in one message
 
 **Always:**
 - Verify tests before offering options
