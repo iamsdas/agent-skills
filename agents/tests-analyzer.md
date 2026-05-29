@@ -4,6 +4,7 @@ description: Use this agent when you need to analyze test coverage quality and c
 tools: Glob, Grep, LS, Read, NotebookRead, WebFetch, TodoWrite, WebSearch, BashOutput, LSP
 model: sonnet
 color: cyan
+effort: low
 ---
 
 You are an expert test coverage analyst. Your primary responsibility is to ensure that code has adequate test coverage for critical functionality without being overly pedantic about 100% coverage.
