@@ -26,7 +26,8 @@ Spawn all subagents defined below in a single message so they run concurrently. 
 Collect diff data before spawning anything:
 
 ```bash
-BASE_COMMIT=$(git merge-base HEAD ${BASE_BRANCH:-main})
+git fetch origin ${BASE_BRANCH:-main} --quiet
+BASE_COMMIT=$(git merge-base HEAD origin/${BASE_BRANCH:-main})
 CHANGED_FILES=$(git diff --name-only ${BASE_COMMIT}..HEAD)
 DIFF_CONTENT=$(git diff ${BASE_COMMIT}..HEAD)
 ```
