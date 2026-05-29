@@ -99,7 +99,6 @@ Two to three sentences: what tests currently cover this path, what's missing, an
    - Launch once likely affected files/symbols are identified. Pass the affected file paths and the diagnosed root cause as context.
    - Ask it to return:
      - Existing tests covering this behavior, grouped by test type.
-     - Missing coverage tied to the diagnosed root cause.
      - The most appropriate "should-have-existed" test that would have caught this issue earlier.
    - Incorporate this output into the final `Testing coverage for this issue` section.
 

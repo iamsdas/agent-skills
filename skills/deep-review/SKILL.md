@@ -94,11 +94,7 @@ Spawn only the subagents whose condition is met. Write the skipped-subagents not
 
 ### tests (tests-analyzer)
 **subagent_type:** `tests-analyzer`
-**Task:**
-- For each changed component or code path, identify whether tests exist that cover the change
-- Flag missing unit tests, integration tests, and edge case coverage
-- Note if existing tests were deleted without replacement
-**Output:** per-component coverage assessment with specific gaps called out at file:line, rated by criticality
+**Task:** Focus on changed components and code paths in this diff. Note if existing tests were deleted without replacement.
 
 ---
 
@@ -117,9 +113,7 @@ Spawn only the subagents whose condition is met. Write the skipped-subagents not
 **Task:**
 - Find edge cases not handled (off-by-one, null/empty inputs, concurrency, overflow, race conditions)
 - Identify outright bugs: wrong operator, incorrect conditional, missing await, etc.
-- Check adherence to conventions already established in the codebase: testing framework, assertion style, file naming, import style, error handling patterns
 - If a bug or edge case is in dead, unreachable, or unused code, note that explicitly and do NOT escalate its severity
-- Only report issues with confidence ≥ 80
 **Output:** grouped list of logic issues and convention violations with file:line, confidence score, severity, and suggested fix
 
 ---
@@ -136,22 +130,13 @@ Spawn only the subagents whose condition is met. Write the skipped-subagents not
 
 ### silent-failures (silent-failure-hunter)
 **subagent_type:** `silent-failure-hunter`
-**Task:**
-- Identify catch blocks that swallow errors without logging or user feedback
-- Flag fallback logic that masks underlying problems
-- Check that every error path surfaces actionable information to the user or logs sufficient context for debugging
-**Output:** list of silent failure risks with file:line, severity (CRITICAL/HIGH/MEDIUM), and recommended fix
+**Task:** Focus only on error-handling code added or changed in this diff.
 
 ---
 
 ### types (type-design-analyzer)
 **subagent_type:** `type-design-analyzer`
-**Task:**
-- Analyze new or modified types introduced in this diff
-- Identify whether illegal states can be constructed — look for types where invalid combinations of fields are possible or constructors that skip validation
-- Flag mutable internals exposed externally and missing construction-time validation
-- Note anemic types with no behavior and types with too many responsibilities
-**Output:** per-type analysis with encapsulation/invariant ratings, concerns, and recommended improvements
+**Task:** Analyze only types introduced or modified in this diff.
 
 ---
 
