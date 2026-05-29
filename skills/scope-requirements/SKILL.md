@@ -37,7 +37,7 @@ Use this skill to prevent premature implementation planning. First align on prod
 
 4. Output the final scope document:
    - Once the user confirms the scope is complete, produce the final document using the template below.
-   - Output it as a clean markdown block the user can copy directly (no preamble, no trailing commentary).
+   - Output it as rendered markdown (no fenced code block, no preamble, no trailing commentary) so it renders with headers and formatting in the CLI.
    - Do NOT switch to planning mode. Do NOT write implementation steps.
 
 ## Guardrails
@@ -81,9 +81,8 @@ AskUserQuestion(questions=[
 ])
 ```
 
-Once confirmed, output ONLY the following block — no intro sentence, no "here is your ticket", nothing before or after:
+Once confirmed, output ONLY the following — no intro sentence, no "here is your ticket", no fenced code block, nothing before or after. Output it as raw markdown so it renders with headers and formatting:
 
-```markdown
 # <Title>
 
 ## Context
@@ -108,4 +107,3 @@ Once confirmed, output ONLY the following block — no intro sentence, no "here 
 ## Out of Scope
 
 - <related thing explicitly excluded>
-```
