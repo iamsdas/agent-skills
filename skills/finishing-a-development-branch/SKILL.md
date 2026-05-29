@@ -9,7 +9,7 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 Guide completion of development work by presenting clear options and handling chosen workflow.
 
-**Core principle:** Verify tests → Detect environment → Present options → Execute choice → Clean up.
+**Core principle:** Verify tests → Detect environment → Quality scan → Present options → Execute choice → Clean up.
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
@@ -51,7 +51,7 @@ This determines which menu to show and how cleanup works:
 | State | Menu | Cleanup |
 |-------|------|---------|
 | `GIT_DIR == GIT_COMMON` (normal repo) | Standard 4 options | No worktree to clean up |
-| `GIT_DIR != GIT_COMMON`, named branch | Standard 4 options | Provenance-based (see Step 6) |
+| `GIT_DIR != GIT_COMMON`, named branch | Standard 4 options | Provenance-based (see Step 7) |
 | `GIT_DIR != GIT_COMMON`, detached HEAD | Reduced 3 options (no merge) | No cleanup (externally managed) |
 
 ### Step 3: Determine Base Branch
@@ -63,7 +63,45 @@ git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 
 Or ask: "This branch split from main - is that correct?"
 
-### Step 4: Present Options
+### Step 4: Quality Scan
+
+**Collect diff data** (BASE_BRANCH is already known from Step 3):
+
+```bash
+BASE_COMMIT=$(git merge-base HEAD ${BASE_BRANCH})
+CHANGED_FILES=$(git diff --name-only ${BASE_COMMIT}..HEAD)
+DIFF_CONTENT=$(git diff ${BASE_COMMIT}..HEAD)
+```
+
+**Short-circuit:** If `CHANGED_FILES` is empty, skip to Step 5 with no output.
+
+**Dispatch all three in parallel** (single message, all background):
+
+- **`tests-analyzer`** — pass CHANGED_FILES + DIFF_CONTENT. Prompt: *"Review this diff for CRITICAL test coverage gaps only — logic branches with no test at all, untested error paths, new public functions with zero coverage. Ignore nice-to-haves and style. If no critical gaps exist, say 'No critical gaps found' and stop. Return at most 3 findings: file:line, what is untested, what failure it would miss, and a criticality rating 7-10."*
+
+- **`silent-failure-hunter`** — pass DIFF_CONTENT. Prompt: *"Review this diff for CRITICAL and HIGH severity silent failures only. Skip MEDIUM. Focus on: empty catch blocks (CRITICAL), error paths returning null/undefined without logging (CRITICAL), broad catches hiding unrelated errors (HIGH), fallback logic masking problems without any log (HIGH). If no CRITICAL or HIGH issues exist, say 'No critical error handling issues found' and stop. Return at most 3 findings: file:line, severity, one sentence on the issue, one sentence on debugging impact."*
+
+- **`comment-analyzer`** — pass CHANGED_FILES (read their content). Prompt: *"Review the changed files for CRITICAL comment issues only — comments that are factually wrong or actively misleading about what the code does. Ignore missing comments, style, wording preferences, and minor inaccuracies. If no critical issues exist, say 'No critical comment issues found' and stop. Return at most 3 findings: file:line, what the comment says vs what the code actually does."*
+
+**Render findings** above the options menu once all three return:
+
+- Intermix all findings sorted by severity: `[CRITICAL]` → `[HIGH]` → `[gap:9+]` → `[gap:7-8]` → `[comment]`
+- Cap at 6 items total; if more: `(+N more — run /deep-review for full report)`
+- Always close with: `These are advisory. Proceeding to options.`
+- **If no findings across all three agents: print nothing.** Silence means clean — no false-confidence banner.
+
+Example when findings exist:
+```
+Quality scan complete.
+
+[CRITICAL] auth.ts:88 — Catch block swallows all errors without logging
+[gap:9] UserService.ts:120 — createUser() has no test for the duplicate-email branch
+[comment] config.ts:15 — Comment says "reads from env" but code reads from hardcoded map
+
+These are advisory. Proceeding to options.
+```
+
+### Step 5: Present Options
 
 **Normal repo and named-branch worktree — present exactly these 4 options:**
 
@@ -92,7 +130,7 @@ Which option?
 
 **Don't add explanation** - keep options concise.
 
-### Step 5: Execute Choice
+### Step 6: Execute Choice
 
 #### Option 1: Merge Locally
 
@@ -109,7 +147,7 @@ git merge <feature-branch>
 # Verify tests on merged result
 <test command>
 
-# Only after merge succeeds: cleanup worktree (Step 6), then delete branch
+# Only after merge succeeds: cleanup worktree (Step 7), then delete branch
 ```
 
 Then: Cleanup worktree (Step 6), then delete branch:
@@ -168,7 +206,7 @@ Then: Cleanup worktree (Step 6), then force-delete branch:
 git branch -D <feature-branch>
 ```
 
-### Step 6: Cleanup Workspace
+### Step 7: Cleanup Workspace
 
 **Only runs for Options 1 and 4.** Options 2 and 3 always preserve the worktree.
 
@@ -200,6 +238,8 @@ git worktree prune  # Self-healing: clean up any stale registrations
 | 3. Keep as-is | - | - | yes | - |
 | 4. Discard | - | - | - | yes (force) |
 
+Quality scan runs before all options — always advisory, never blocking.
+
 ## Common Mistakes
 
 **Skipping test verification**
@@ -230,6 +270,14 @@ git worktree prune  # Self-healing: clean up any stale registrations
 - **Problem:** Accidentally delete work
 - **Fix:** Require typed "discard" confirmation
 
+**Dispatching quality subagents sequentially**
+- **Problem:** Doubles wall-clock time of the quality scan
+- **Fix:** Dispatch all three in a single message
+
+**Blocking on quality scan findings**
+- **Problem:** User cannot proceed until findings are resolved — not the intent
+- **Fix:** Quality scan is always advisory; always proceed to the options menu
+
 ## Red Flags
 
 **Never:**
@@ -240,6 +288,9 @@ git worktree prune  # Self-healing: clean up any stale registrations
 - Remove a worktree before confirming merge success
 - Clean up worktrees you didn't create (provenance check)
 - Run `git worktree remove` from inside the worktree
+- Block progression to the options menu based on quality scan output
+- Print a "no issues found" success message from the quality scan (false confidence)
+- Dispatch quality subagents sequentially — all three must go in one message
 
 **Always:**
 - Verify tests before offering options
