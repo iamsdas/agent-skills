@@ -12,6 +12,7 @@ Spawn all subagents defined below in a single message so they run concurrently. 
 
 ## Execution Rules
 
+- **Subagent types:** For every subagent that has a `subagent_type` field, you MUST pass that exact value as the `subagent_type` parameter to the Agent tool. Never spawn a general-purpose agent when a `subagent_type` is specified — this is a correctness requirement.
 - **Model parameter:** Named agents (`subagent_type` specified) define their own model — do not pass a `model` parameter. General-purpose agents (no `subagent_type`) MUST have an explicit `model` parameter. Omitting model on a general-purpose call is a bug.
 - **Task tracking:** Before spawning any subagent, create one task per **applicable** subagent (after triage) using TaskCreate. Mark all tasks `in_progress` when spawning. As each background agent returns, mark its task `completed`. This renders a live-updating checklist in the UI.
 - **Parallelism:** Spawn ALL subagents in a single message. Do NOT wait for one to finish before launching the next. Use `run_in_background: true` for every subagent.
@@ -199,6 +200,8 @@ Spawn only the subagents whose condition is met. Write the skipped-subagents not
 ---
 
 ## Summary
+
+**Purpose:** <1-2 sentences: what this branch/PR is trying to accomplish and why.>
 
 **Merge readiness:** Ready / Needs fixes / Blocked
 
