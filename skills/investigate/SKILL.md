@@ -71,7 +71,7 @@ Two to three sentences: what tests currently cover this path, what's missing, an
    - If branch is not `main`, ask the user whether the issue is tied to this branch's changes.
    - If user confirms yes, explicitly track this as `Branch context` and prioritize code paths changed on that branch during diagnosis.
    - If user says no, proceed as usual without branch-scoped assumptions.
-   - For branch context, summarize the branch changes using a subagent as a caveman.
+   - For branch context, summarize the branch changes using a `code-explorer` subagent asked to respond as a caveman (terse summary).
 
 2. Parse available signal (logs OR user report):
    - If logs/errors exist: extract error class/type, message, stack frames, and correlated context (request IDs, endpoint, job, tenant, user action).
@@ -83,20 +83,20 @@ Two to three sentences: what tests currently cover this path, what's missing, an
    - Identify common trigger scenarios.
    - Distinguish hard failures vs partial degradation.
 
-4. Map signal to code using subagent:
+4. Map signal to code using a `code-explorer` subagent:
    - Find the exact symbol/function and smallest branch/condition causing the behavior.
    - Cite only the minimal root-cause snippet.
    - Do not cite logging lines, exception construction/raising lines, or wrapper handlers unless they are the direct root cause.
 
-5. Check git history for relevant commits using a subagent:
+5. Check git history for relevant commits using a `code-explorer` subagent:
    - Search recent commits for changes to the files/symbols identified in the root cause.
    - Look for commits that: introduced the bug, modified the affected logic, or touched related code paths.
    - Include the commit hash, author, date, and one-line summary for each relevant commit.
    - Note if the issue was introduced in a recent commit vs. long-standing behavior.
    - Incorporate findings into the **Root cause** section or add a brief **Relevant commits** sub-section if noteworthy.
 
-6. Consolidate test coverage with a subagent:
-   - Launch the `feature-test-coverage-analyst` subagent once likely affected files/symbols are identified.
+6. Consolidate test coverage with a `tests-analyzer` subagent:
+   - Launch once likely affected files/symbols are identified. Pass the affected file paths and the diagnosed root cause as context.
    - Ask it to return:
      - Existing tests covering this behavior, grouped by test type.
      - Missing coverage tied to the diagnosed root cause.

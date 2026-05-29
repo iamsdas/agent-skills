@@ -14,7 +14,7 @@ Use this skill to prevent premature implementation planning. First align on prod
 
 1. Restate the request in product terms:
    - Summarize desired outcome for end users.
-   - Summarize current behavior or baseline behavior, if available using a subagent.
+   - Summarize current behavior or baseline behavior, if available, using a `code-explorer` subagent to trace relevant code paths.
    - Highlight gaps between current and desired behavior.
 
 2. Refine expectations without implementation details:

@@ -12,7 +12,7 @@ Spawn all subagents defined below in a single message so they run concurrently. 
 
 ## Execution Rules
 
-- **Model parameter:** You MUST pass the `model` parameter on every Agent tool call. Never omit it. Subagents spawned without a model parameter are a bug.
+- **Model parameter:** Named agents (`subagent_type` specified) define their own model — do not pass a `model` parameter. General-purpose agents (no `subagent_type`) MUST have an explicit `model` parameter. Omitting model on a general-purpose call is a bug.
 - **Task tracking:** Before spawning any subagent, create one task per subagent using TaskCreate. Mark all tasks `in_progress` when spawning. As each background agent returns, mark its task `completed`. This renders a live-updating checklist in the UI.
 - **Parallelism:** Spawn ALL subagents in a single message. Do NOT wait for one to finish before launching the next. Use `run_in_background: true` for every subagent.
 - **Output suppression:** Write exactly one line before spawning: `Running deep review…`. Write nothing else until all subagents have returned.
@@ -21,16 +21,20 @@ Spawn all subagents defined below in a single message so they run concurrently. 
 
 ## Subagents
 
-### context (haiku)
+### context (code-explorer)
+**subagent_type:** `code-explorer`
 **Task:**
-- Summarize branch purpose and scope of changes
-- Extract and list commit messages
-- Capture PR title, body, and any linked discussion
-**Output:** branch summary, PR context paragraph, changed file list
+- Analyze this branch to understand the scope and purpose of changes
+- Summarize what the branch is trying to accomplish in 1-3 sentences
+- List the changed files grouped by concern (e.g., "API layer", "data model", "tests")
+- Extract and list commit messages in order
+- If a PR exists, capture the PR title, body, and any linked discussion
+**Output:** branch summary paragraph, changed-file list grouped by concern, PR context paragraph (if applicable)
 
 ---
 
 ### deps (haiku)
+**model:** `haiku`
 **Task:**
 - List every new package added and any version changes to existing packages
 - Note if a package is dev-only vs runtime
@@ -38,15 +42,19 @@ Spawn all subagents defined below in a single message so they run concurrently. 
 
 ---
 
-### breaking (sonnet)
+### breaking (code-architect)
+**subagent_type:** `code-architect`
 **Task:**
+- Analyze this diff for backwards-compatibility issues
 - Identify changes to public APIs, exported interfaces, function signatures, and schema definitions that are not backwards-compatible
 - Flag removed or renamed exports, changed parameter types, and removed fields
+- Note any implicit contracts (undocumented behavior callers may depend on) that changed
 **Output:** list of breaking changes with file:line references and description of what breaks
 
 ---
 
 ### migrations (sonnet)
+**model:** `sonnet`
 **Task:**
 - Find database migrations, schema changes, and data transformations
 - Check whether each migration is backwards-compatible (old code can run against new schema and vice versa)
@@ -55,17 +63,19 @@ Spawn all subagents defined below in a single message so they run concurrently. 
 
 ---
 
-### tests (sonnet)
+### tests (tests-analyzer)
+**subagent_type:** `tests-analyzer`
 **Task:**
 - For each changed component or code path, identify whether tests exist that cover the change
 - Flag missing unit tests, integration tests, and edge case coverage
 - Note if existing tests were deleted without replacement
-**Output:** per-component coverage assessment with specific gaps called out at file:line
+**Output:** per-component coverage assessment with specific gaps called out at file:line, rated by criticality
 
 ---
 
-### redundancy (sonnet)
-**Task:**
+### redundancy (code-simplifier)
+**subagent_type:** `code-simplifier`
+**Task:** Analysis only — do not apply any changes.
 - Find code that duplicates existing functionality elsewhere in the diff or codebase
 - Identify dead code, unreachable branches, and unused variables introduced by this diff
 - Flag old code paths that are logically superseded by a new path (e.g., old endpoint) but are neither removed nor marked deprecated
@@ -73,31 +83,46 @@ Spawn all subagents defined below in a single message so they run concurrently. 
 
 ---
 
-### logic (sonnet)
+### logic-and-conventions (code-reviewer)
+**subagent_type:** `code-reviewer`
 **Task:**
-- Find edge cases not handled by the new logic (off-by-one, null/empty inputs, concurrency, overflow, race conditions)
+- Find edge cases not handled (off-by-one, null/empty inputs, concurrency, overflow, race conditions)
 - Identify outright bugs: wrong operator, incorrect conditional, missing await, etc.
+- Check adherence to conventions already established in the codebase: testing framework, assertion style, file naming, import style, error handling patterns
 - If a bug or edge case is in dead, unreachable, or unused code, note that explicitly and do NOT escalate its severity
-**Output:** list of logic issues with file:line, description of the problem, suggested fix, and whether the affected code is live vs unused
+- Only report issues with confidence ≥ 80
+**Output:** grouped list of logic issues and convention violations with file:line, confidence score, severity, and suggested fix
 
 ---
 
-### conventions (sonnet)
-**Task:**
-- Identify the conventions already established in the codebase: testing framework/package, assertion style, file naming, import style, error handling patterns, etc.
-- For every new test or feature file introduced in the diff, check whether it follows those same conventions
-- Flag deviations: e.g., new test uses a different testing library, new file uses a different naming scheme, new error handling diverges from the established pattern
-- Only flag genuine divergence from a clear existing convention — do not flag where no convention exists
-**Output:** list of convention violations with file:line, the established convention, and what the new code does instead
-
----
-
-### comments-params (sonnet)
+### comments-params (comment-analyzer)
+**subagent_type:** `comment-analyzer`
 **Task:**
 - Flag removed comments that captured information not obvious from the code alone (hidden constraints, workarounds, subtle invariants)
 - Flag new parameters, config values, or flags that lack documentation when the information is non-obvious
 - For every newly introduced parameter, config value, or flag: validate the name and value are correct against source type definitions or official documentation. Never assume validity without evidence.
 **Output:** list of documentation gaps and param validation findings with file:line
+
+---
+
+### silent-failures (silent-failure-hunter)
+**subagent_type:** `silent-failure-hunter`
+**Task:**
+- Identify catch blocks that swallow errors without logging or user feedback
+- Flag fallback logic that masks underlying problems
+- Check that every error path surfaces actionable information to the user or logs sufficient context for debugging
+**Output:** list of silent failure risks with file:line, severity (CRITICAL/HIGH/MEDIUM), and recommended fix
+
+---
+
+### types (type-design-analyzer)
+**subagent_type:** `type-design-analyzer`
+**Task:**
+- Analyze new or modified types introduced in this diff
+- Identify whether illegal states can be constructed — look for types where invalid combinations of fields are possible or constructors that skip validation
+- Flag mutable internals exposed externally and missing construction-time validation
+- Note anemic types with no behavior and types with too many responsibilities
+**Output:** per-type analysis with encapsulation/invariant ratings, concerns, and recommended improvements
 
 ---
 
