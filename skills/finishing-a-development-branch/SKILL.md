@@ -75,7 +75,17 @@ DIFF_CONTENT=$(git diff ${BASE_COMMIT}..HEAD)
 
 **Short-circuit:** If `CHANGED_FILES` is empty, skip to Step 5 with no output.
 
-**Dispatch all three in parallel** (single message, all background):
+**Triage — determine which subagents to spawn:**
+
+Evaluate the already-collected `CHANGED_FILES` and `DIFF_CONTENT` against these rules. Build the list of subagents to spawn before dispatching anything.
+
+| Subagent | Spawn if | Skip if |
+|---|---|---|
+| `tests-analyzer` | Any source code file changed | ALL changed files are config/docs/assets (e.g., only `.json`, `.yaml`, `.toml`, `.md`, `.txt`, image files) |
+| `silent-failure-hunter` | DIFF_CONTENT contains error-handling patterns: `try`, `catch`, `except`, `rescue`, `.catch(`, `handleError`, `onError`, `Result<`, `Err(` | None of those patterns appear in the diff |
+| `comment-analyzer` | DIFF_CONTENT has added or removed comment lines (diff lines starting with `+//`, `+#`, `+/*`, `+ *`, `+"""`, `+'''`) | No comment lines in the diff |
+
+**Dispatch applicable subagents in parallel** (single message, all background). Only spawn subagents that passed triage above — omit the rest entirely:
 
 - **`tests-analyzer`** — pass CHANGED_FILES + DIFF_CONTENT. Prompt: *"Review this diff for CRITICAL test coverage gaps only — logic branches with no test at all, untested error paths, new public functions with zero coverage. Ignore nice-to-haves and style. If no critical gaps exist, say 'No critical gaps found' and stop. Return at most 3 findings: file:line, what is untested, what failure it would miss, and a criticality rating 7-10."*
 
@@ -88,7 +98,7 @@ DIFF_CONTENT=$(git diff ${BASE_COMMIT}..HEAD)
 - Intermix all findings sorted by severity: `[CRITICAL]` → `[HIGH]` → `[gap:9+]` → `[gap:7-8]` → `[comment]`
 - Cap at 6 items total; if more: `(+N more — run /deep-review for full report)`
 - Always close with: `These are advisory. Proceeding to options.`
-- **If no findings across all three agents: print nothing.** Silence means clean — no false-confidence banner.
+- **If no findings across all spawned agents: print nothing.** Silence means clean — no false-confidence banner.
 
 Example when findings exist:
 ```
