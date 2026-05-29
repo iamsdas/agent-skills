@@ -1,7 +1,6 @@
 {
   "name": "surya-skills",
   "description": "Personal Claude Code skills plugin",
-  "version": "1.0.0",
   "author": {
     "name": "Suryashankar Das",
     "email": "surya@fused.io"
