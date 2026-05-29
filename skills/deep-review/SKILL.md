@@ -42,10 +42,10 @@ Evaluate each subagent against these rules:
 | `breaking` | — | DIFF_CONTENT has removed or changed exported/public symbols: diff lines matching `-.*export `, `-.*interface `, `-.*type `, `-.*pub fn`, `-.*pub struct`, `-.*pub enum`; or CHANGED_FILES includes API route definition files or GraphQL schema files |
 | `migrations` | — | CHANGED_FILES includes paths containing `migration`, `schema`, `.sql`, `alembic`, `prisma`, or a dedicated `db/` directory |
 | `silent-failures` | — | DIFF_CONTENT contains error-handling patterns: `try`, `catch`, `except`, `rescue`, `.catch(`, `handleError`, `onError`, `Result<`, `Err(` |
-| `comments-params` | — | DIFF_CONTENT adds or removes comment lines (`+//`, `-//`, `+#`, `-#`, `+/*`, `-/*`, `+ *`, `- *`), or adds new function parameters, config flags, or env vars |
+| `comments-params` | — | DIFF_CONTENT adds or removes comment lines (`+//`, `-//`, `+#`, `-#`, `+/*`, `-/*`, `+ *`, `- *`, `+"""`, `-"""`, `+'''`, `-'''`), or adds new function parameters, config flags, or env vars |
 | `types` | — | DIFF_CONTENT contains type definition patterns: `interface `, `type .* =`, `dataclass`, `TypedDict`, `type .* struct`, `struct `, `enum ` (check for these on `+` diff lines — added type definitions) |
 
-Spawn only the subagents whose condition is met. Write the skipped-subagents note on the line immediately after "Running deep review…" — this note precedes the output suppression window. Example: `(skipping: deps, migrations, types — not applicable to this diff)`. If no subagents are skipped, omit this note.
+Spawn only the subagents whose condition is met. Write the skipped-subagents note on the line immediately after "Running deep review…" (before the output suppression window begins). Example: `(skipping: deps, migrations, types — not applicable to this diff)`. If no subagents are skipped, omit this note.
 
 ## Subagents
 
