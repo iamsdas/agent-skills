@@ -19,10 +19,13 @@ WHEN receiving code review feedback:
 1. READ: Complete feedback without reacting
 2. UNDERSTAND: Restate requirement in own words (or ask)
 3. VERIFY: Check against codebase reality
+   IF feedback describes a bug → use the investigate skill before evaluating
 4. EVALUATE: Technically sound for THIS codebase?
 5. RESPOND: Technical acknowledgment or reasoned pushback
 6. IMPLEMENT: One item at a time, test each
 ```
+
+**REQUIRED SUB-SKILL for bugs:** When feedback identifies a bug (incorrect behavior, crash, regression, wrong output), invoke `investigate` as part of step 3 to understand root cause, user impact, and test coverage before deciding whether to implement the fix.
 
 ## Forbidden Responses
 
