@@ -1,14 +1,19 @@
 {
-  "name": "surya-local",
+  "name": "iamsdas-plugins",
   "owner": {
     "name": "Suryashankar Das",
-    "email": "surya@fused.io"
+    "email": "suryashankardas.2002@gmail.com"
   },
   "plugins": [
     {
-      "name": "surya-skills",
-      "description": "Personal Claude Code skills plugin",
-      "source": "./"
+      "name": "development",
+      "description": "Development workflow skills and agents plugin",
+      "source": "./development"
+    },
+    {
+      "name": "utilities",
+      "description": "Utility skills plugin",
+      "source": "./utilities"
     }
   ]
 }
