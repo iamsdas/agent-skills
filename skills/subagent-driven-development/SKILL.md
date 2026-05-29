@@ -86,21 +86,6 @@ digraph process {
 }
 ```
 
-## Model Selection
-
-Use the least powerful model that can handle each role to conserve cost and increase speed.
-
-**Mechanical implementation tasks** (isolated functions, clear specs, 1-2 files): use a fast, cheap model. Most implementation tasks are mechanical when the plan is well-specified.
-
-**Integration and judgment tasks** (multi-file coordination, pattern matching, debugging): use a standard model.
-
-**Architecture, design, and review tasks**: use the most capable available model.
-
-**Task complexity signals:**
-- Touches 1-2 files with a complete spec → cheap model
-- Touches multiple files with integration concerns → standard model
-- Requires design judgment or broad codebase understanding → most capable model
-
 ## Handling Implementer Status
 
 Implementer subagents report one of four statuses. Handle each appropriately:
@@ -121,9 +106,11 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 ## Prompt Templates
 
-- `./implementer-prompt.md` - Dispatch implementer subagent
-- `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
-- `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
+| Template | Agent | Model | Purpose |
+|----------|-------|-------|---------|
+| `./implementer-prompt.md` | `focused-builder` | haiku | Implements a well-scoped task, follows TDD, commits, self-reviews |
+| `./spec-reviewer-prompt.md` | `code-explorer` | haiku | Reads actual code and verifies it matches the spec |
+| `./code-quality-reviewer-prompt.md` | `code-reviewer` | sonnet | Reviews code quality, bugs, conventions, test coverage |
 
 ## Example Workflow
 
@@ -200,38 +187,6 @@ Final reviewer: All requirements met, ready to merge
 
 Done!
 ```
-
-## Advantages
-
-**vs. Manual execution:**
-- Subagents follow TDD naturally
-- Fresh context per task (no confusion)
-- Parallel-safe (subagents don't interfere)
-- Subagent can ask questions (before AND during work)
-
-**vs. Executing Plans:**
-- Same session (no handoff)
-- Continuous progress (no waiting)
-- Review checkpoints automatic
-
-**Efficiency gains:**
-- No file reading overhead (controller provides full text)
-- Controller curates exactly what context is needed
-- Subagent gets complete information upfront
-- Questions surfaced before work begins (not after)
-
-**Quality gates:**
-- Self-review catches issues before handoff
-- Two-stage review: spec compliance, then code quality
-- Review loops ensure fixes actually work
-- Spec compliance prevents over/under-building
-- Code quality ensures implementation is well-built
-
-**Cost:**
-- More subagent invocations (implementer + 2 reviewers per task)
-- Controller does more prep work (extracting all tasks upfront)
-- Review loops add iterations
-- But catches issues early (cheaper than debugging later)
 
 ## Red Flags
 
