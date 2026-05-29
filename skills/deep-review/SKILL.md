@@ -16,7 +16,7 @@ Spawn all subagents defined below in a single message so they run concurrently. 
 - **Task tracking:** Before spawning any subagent, create one task per **applicable** subagent (after triage) using TaskCreate. Mark all tasks `in_progress` when spawning. As each background agent returns, mark its task `completed`. This renders a live-updating checklist in the UI.
 - **Parallelism:** Spawn ALL subagents in a single message. Do NOT wait for one to finish before launching the next. Use `run_in_background: true` for every subagent.
 - **Triage (before spawning):** Collect `CHANGED_FILES` and `DIFF_CONTENT` via `git diff` (see Triage section below). Evaluate the rule table to determine which subagents to spawn. Then spawn only the applicable set — all in a single message with `run_in_background: true`.
-- **Output suppression:** Write exactly one line before spawning: `Running deep review…` (after triage is complete). Write nothing else until all subagents have returned.
+- **Output suppression:** Write `Running deep review…` before spawning (after triage is complete), then optionally a skipped-subagents note if applicable (see Triage section). Write nothing else until all subagents have returned.
 - **Final output:** Prioritize findings by severity with concrete file/symbol references.
 - **Unused code severity cap:** Any finding (bug, logic error, missing test, etc.) in code identified as dead, unreachable, or unused MUST be capped at `[low]` severity. Do not mark errors in unused code as `[high]` or `[critical]`.
 
