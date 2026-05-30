@@ -30,7 +30,7 @@ Task tool (code-reviewer):
 
     ## Additional Checks
 
-    Beyond standard code quality, also verify:
+    You are the only reviewer for this task — no specialist agents are running alongside you. Beyond standard code quality, briefly flag any major test-coverage or error-handling gaps so nothing falls through (keep it shallow). Also verify:
     - Does each file have one clear responsibility with a well-defined interface?
     - Are units decomposed so they can be understood and tested independently?
     - Is the implementation following the file structure from the plan?

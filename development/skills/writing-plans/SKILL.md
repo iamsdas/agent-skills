@@ -44,7 +44,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 ### 3. Architecture Design
 
-**Task:** Launch 2-3 code-architect agents in parallel with different focuses — minimal changes (smallest change, maximum reuse), clean architecture (maintainability, elegant abstractions), or pragmatic balance (speed + quality). In the same batch, launch one `code-simplifier` agent (analysis only — it must not edit) to identify simplification opportunities the change opens up: dead code or branches the change makes unreachable, duplication that can now be consolidated, and abstractions that can be collapsed. Review all approaches and form a recommendation.
+**Task:** Launch 2-3 code-architect agents in parallel with different focuses — minimal changes (smallest change, maximum reuse), clean architecture (maintainability, elegant abstractions), or pragmatic balance (speed + quality). Pass each architect the exploration summary from step 2 (patterns, parallel implementations, and call sites) — the architects design the high-level approach and build on those findings rather than re-tracing the codebase themselves. In the same batch, launch one `code-simplifier` agent (analysis only — it must not edit) to identify simplification opportunities the change opens up: dead code or branches the change makes unreachable, duplication that can now be consolidated, and abstractions that can be collapsed. Review all approaches and form a recommendation.
 
 **Output:** Brief summary of each approach, trade-offs comparison, recommendation with reasoning, and any simplification opportunities worth folding into the plan. Present to user and wait for confirmation before continuing.
 

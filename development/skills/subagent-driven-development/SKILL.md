@@ -110,7 +110,7 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 |----------|-------|-------|---------|
 | `./implementer-prompt.md` | `focused-builder` | haiku | Implements a well-scoped task, follows TDD, commits, self-reviews |
 | `./spec-reviewer-prompt.md` | `code-reviewer` | sonnet | Reads actual code and verifies it matches the spec |
-| `./code-quality-reviewer-prompt.md` | `code-reviewer` | sonnet | Reviews code quality, bugs, conventions, test coverage |
+| `./code-quality-reviewer-prompt.md` | `code-reviewer` | sonnet | Reviews code quality, bugs, conventions (sole reviewer — also flags major test/error-handling gaps) |
 
 ## Example Workflow
 

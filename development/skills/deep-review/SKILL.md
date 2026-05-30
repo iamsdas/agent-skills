@@ -113,6 +113,7 @@ Spawn only the subagents whose condition is met. Write the skipped-subagents not
 ### logic-and-conventions (code-reviewer)
 **subagent_type:** `code-reviewer`
 **Task:**
+- Specialist agents are running alongside you in this review (tests, silent-failures, comments, types). Defer those lanes to them — focus only on the items below.
 - Find edge cases not handled (off-by-one, null/empty inputs, concurrency, overflow, race conditions)
 - Identify outright bugs: wrong operator, incorrect conditional, missing await, etc.
 - If a bug or edge case is in dead, unreachable, or unused code, note that explicitly and do NOT escalate its severity
