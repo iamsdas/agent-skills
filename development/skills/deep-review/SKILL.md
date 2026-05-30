@@ -18,8 +18,7 @@ Spawn all subagents defined below in a single message so they run concurrently. 
 - **Parallelism:** Spawn ALL subagents in a single message. Do NOT wait for one to finish before launching the next. Use `run_in_background: true` for every subagent.
 - **Triage (before spawning):** Collect `CHANGED_FILES` and `DIFF_CONTENT` via `git diff` (see Triage section below). Evaluate the rule table to determine which subagents to spawn. Then spawn only the applicable set — all in a single message with `run_in_background: true`.
 - **Output suppression:** Write `Running deep review…` before spawning (after triage is complete), then optionally a skipped-subagents note if applicable (see Triage section). Write nothing else until all subagents have returned.
-- **Final output:** Prioritize findings by severity with concrete file/symbol references.
-- **Unused code severity cap:** Any finding (bug, logic error, missing test, etc.) in code identified as dead, unreachable, or unused MUST be capped at `[low]` severity. Do not mark errors in unused code as `[high]` or `[critical]`.
+- **Final output:** Prioritize findings by severity with concrete file/symbol references. You (the orchestrator) are the final authority on severity — apply the **Severity Rubric** below to every finding during synthesis, downgrading subagent-proposed severities wherever a cap applies. Subagents propose; you decide.
 
 ## Triage
 
@@ -50,6 +49,13 @@ Evaluate each subagent against these rules:
 Spawn only the subagents whose condition is met. Write the skipped-subagents note on the line immediately after "Running deep review…" (before the output suppression window begins). Example: `(skipping: deps, migrations, types — not applicable to this diff)`. If no subagents are skipped, omit this note.
 
 ## Subagents
+
+**Every finding from every subagent MUST be tagged with the three attributes the Severity Rubric needs, so the orchestrator can apply caps:**
+- **Origin:** `introduced` (the diff added or modified the responsible line(s), within `BASE_COMMIT..HEAD`) or `pre-existing` (the responsible code is unchanged by this diff — outside the `+`/`-` hunks and its behavior is not altered by surrounding changes).
+- **Reach:** `common-path` (hit by default/typical usage) or `narrow` (only reachable via a specific/unlikely input, rare state, or uncommon configuration).
+- **Kind:** `bug` (provably incorrect behavior) or `suggestion` (style, naming, preference, optional refactor, "consider…").
+
+If a subagent cannot determine an attribute with evidence, it must say so and mark the finding `unverified`.
 
 ### context (code-explorer)
 **subagent_type:** `code-explorer`
@@ -114,10 +120,10 @@ Spawn only the subagents whose condition is met. Write the skipped-subagents not
 **subagent_type:** `code-reviewer`
 **Task:**
 - Specialist agents are running alongside you in this review (tests, silent-failures, comments, types). Defer those lanes to them — focus only on the items below.
-- Find edge cases not handled (off-by-one, null/empty inputs, concurrency, overflow, race conditions)
-- Identify outright bugs: wrong operator, incorrect conditional, missing await, etc.
-- If a bug or edge case is in dead, unreachable, or unused code, note that explicitly and do NOT escalate its severity
-**Output:** grouped list of logic issues and convention violations with file:line, confidence score, severity, and suggested fix
+- Find edge cases not handled (off-by-one, null/empty inputs, concurrency, overflow, race conditions). For each, state whether the trigger is `common-path` or `narrow`.
+- Identify outright bugs: wrong operator, incorrect conditional, missing await, etc. Distinguish a real `bug` from a `suggestion` (style/preference/optional refactor).
+- For every finding, determine Origin (`introduced` vs `pre-existing`) against `BASE_COMMIT..HEAD` — do not propose `[high]`/`[critical]` for `pre-existing` code, narrow edge cases, suggestions, or dead/unreachable code (per the Severity Rubric).
+**Output:** grouped list of logic issues and convention violations with file:line, confidence score, the Origin/Reach/Kind attributes, proposed severity, and suggested fix
 
 ---
 
@@ -142,6 +148,29 @@ Spawn only the subagents whose condition is met. Write the skipped-subagents not
 **Task:** Analyze only types introduced or modified in this diff.
 
 ---
+
+## Severity Rubric
+
+Apply this during synthesis to **every** finding. Subagents propose a severity; you normalize it here. When multiple caps apply, take the **lowest** resulting severity.
+
+### Severity definitions
+
+- **`[critical]`** — A `bug` **`introduced`** by this branch on a **`common-path`** that breaks core functionality, corrupts/loses data, opens a security hole, or breaks a public contract.
+- **`[high]`** — A `bug` **`introduced`** by this branch on a **`common-path`** with clear user/system impact and concrete evidence from the diff, but short of critical.
+- **`[medium]`** — A real, `introduced` issue with limited blast radius: `narrow` edge cases, missing tests, deprecated-but-unremoved paths, removed context comments, doc gaps.
+- **`[low]`** — Suggestions, style, naming, minor redundancy, new packages, informational notes, and anything capped below.
+
+### Mandatory caps (override any subagent-proposed severity)
+
+A finding qualifies for `[high]` or `[critical]` **only if it is `introduced` AND `common-path` AND `kind: bug`.** Apply these caps in order:
+
+1. **Pre-existing → `[low]`.** Any finding whose responsible code is `pre-existing` (not introduced or worsened by this diff) is capped at `[low]` and labeled `(pre-existing)`. Exception: if the diff measurably *worsens* a pre-existing issue (e.g., widens its reach or adds a new caller), treat the worsening delta as `introduced` and rate that on its own merits.
+2. **Narrow edge case → `[medium]`.** A `bug` reachable only via a `narrow` trigger is capped at `[medium]`. It may exceed `[medium]` **only** when the impact is severe (data loss, corruption, or security) *and* the trigger is plausible in normal operation — state both justifications explicitly if you escalate.
+3. **Suggestion → `[low]`.** Anything with `kind: suggestion` (style, naming, preference, optional refactor, "consider…") is capped at `[low]`, regardless of how confidently it is argued.
+4. **Unused/dead code → `[low]`.** Any finding (bug, logic error, missing test, etc.) in code identified as dead, unreachable, or unused is capped at `[low]`. Never mark errors in unused code `[high]`/`[critical]`.
+5. **Unverified → `[medium]`.** A finding lacking concrete evidence from the diff/commits/tests, or missing an Origin/Reach/Kind attribute, is capped at `[medium]` and labeled `(unverified)`. Do not promote a guess to `[high]`.
+
+When you downgrade a finding via a cap, keep it in the report at its capped severity with the label — do not silently drop it.
 
 ## Required Output Format
 
