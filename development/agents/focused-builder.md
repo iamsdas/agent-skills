@@ -42,7 +42,7 @@ Report BLOCKED immediately if:
 
 Bad work is worse than no work. Escalate early.
 
-## Report Format
+## Output Format
 
 ```
 Status: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT

@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Scope Requirements
 
-## Purpose
+## Overview
 
 Use this skill to prevent premature implementation planning. First align on product intent and expected behavior, then move to technical planning only after explicit user confirmation.
 

@@ -36,9 +36,9 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 ### 2. Codebase Exploration
 
-**Task:** Launch 2-3 code-explorer agents in parallel. Each targets a different aspect (e.g. similar features, high-level architecture, control flow). Each reads 5-10 key files and traces abstractions end-to-end.
+**Task:** Launch 2-3 code-explorer agents in parallel. Each targets a different aspect (e.g. similar features, high-level architecture, control flow). Each reads 5-10 key files and traces abstractions end-to-end. One explorer MUST enumerate every parallel/duplicate implementation and all call sites of the code being changed — sibling handlers, the same operation for a different entity or platform, copy-pasted branches — so no path that needs the same change is missed.
 
-**Output:** Comprehensive summary of existing patterns and architecture relevant to this task.
+**Output:** Comprehensive summary of existing patterns and architecture relevant to this task, including a list of every parallel implementation or sibling call site that must change in lockstep with the primary change (file:line each).
 
 ---
 
@@ -125,6 +125,7 @@ Every step must contain the actual content an engineer needs. These are **plan f
 - "Add appropriate error handling" / "add validation" / "handle edge cases"
 - "Write tests for the above" without pointing to a specific file and reference pattern
 - "Similar to Task N" — repeat the pointer, the engineer may be reading tasks out of order
+- Changing one path while leaving its siblings untouched — when the same logic lives in multiple parallel places (sibling call sites, duplicated handlers, the same operation for another entity/platform), every task that modifies one MUST list all the others by file:line and apply the same change to each
 - Steps that say what to do without pointing to where (exact file:line references required)
 - Code blocks — describe what to build and where to look, not what to write
 

@@ -136,6 +136,22 @@ What goes wrong + fixes
 Concrete results
 ```
 
+### Canonical Section Names
+
+Use these exact names and casing so every skill reads the same way. Required: `# Title` and an opening section. Everything else is included only when it applies, in this order.
+
+| Section | Required | Notes |
+|---|---|---|
+| `# Title` | ✓ | Title Case, matches the skill |
+| `## Overview` | ✓* | The opening descriptive section. Use this name, NOT `Goal` / `Purpose`. *A skill whose first section is genuinely procedural (`## Instructions`, `## Workflow`) may open with that instead of `## Overview`. |
+| `## When to Use` (+ `## When Not to Use`) | — | Title Case — not `When To Use` |
+| `## Core Pattern` / process / workflow sections | — | The substance of the skill |
+| `## Quick Reference` | — | Tables/bullets for scanning |
+| `## Common Mistakes` / `## Red Flags` | — | What goes wrong + fixes |
+
+**Casing rule:** Title Case for every header (`When to Use`, `Quick Reference`), with short joining words (to, a, for) lowercased. Use real `##` headers, never bold pseudo-headers (`**Workflow:**`).
+
+**Authoring agents, not skills?** See **writing-agents** for the canonical `agents/*.md` format (frontmatter order, `## Process` / `## Output Format` body, moving `<example>` blocks out of the description).
 
 ## Claude Search Optimization (CSO)
 

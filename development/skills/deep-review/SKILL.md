@@ -105,7 +105,8 @@ Spawn only the subagents whose condition is met. Write the skipped-subagents not
 - Find code that duplicates existing functionality elsewhere in the diff or codebase
 - Identify dead code, unreachable branches, and unused variables introduced by this diff
 - Flag old code paths that are logically superseded by a new path (e.g., old endpoint) but are neither removed nor marked deprecated
-**Output:** list of redundant/dead/stale code with file:line and description
+- Flag **incomplete parallel changes**: a change applied to one of several duplicate or sibling code paths but missed in its twins — e.g. a fix made in one handler but not in an identical sibling handler, or logic updated for one entity/platform but not the others that do the same thing. Search the codebase for siblings of each changed function/branch, not just the diff.
+**Output:** list of redundant/dead/stale code with file:line and description, including any sibling paths that should have changed but did not
 
 ---
 

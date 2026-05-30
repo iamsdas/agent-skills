@@ -5,7 +5,7 @@ description: Investigate issues from logs, error messages, or normal user bug re
 
 # Investigate
 
-## Goal
+## Overview
 
 Turn logs/errors/bug reports into:
 
@@ -13,7 +13,7 @@ Turn logs/errors/bug reports into:
 - Exact code locations that most likely cause the issue.
 - A testing-coverage summary for the affected code path, including the missing test that should have caught it.
 
-## When To Use
+## When to Use
 
 Use this skill when:
 
@@ -24,7 +24,7 @@ Use this skill when:
 
 Prefer this skill by default when the input is primarily diagnosis-oriented (logs/errors or behavioral bug reports) and no implementation is requested.
 
-## When Not To Use
+## When Not to Use
 
 DO NOT USE this skill for follow-up questions by the user or general questions during a conversation.
 

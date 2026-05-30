@@ -95,9 +95,11 @@ Evaluate the already-collected `CHANGED_FILES` and `DIFF_CONTENT` against these 
 
 - **`comment-analyzer`** — pass CHANGED_FILES (read their content). Prompt: *"Review the changed files for CRITICAL comment issues only — comments that are factually wrong or actively misleading about what the code does. Ignore missing comments, style, wording preferences, and minor inaccuracies. If no critical issues exist, say 'No critical comment issues found' and stop. Return at most 3 findings: file:line, what the comment says vs what the code actually does."*
 
+**Parallel-change check (inline — no subagent):** For each non-trivial logic change in `DIFF_CONTENT`, grep the codebase for sibling implementations of the same operation — other call sites, duplicated handlers, the same logic done for a different entity, platform, or sync/async variant. If a sibling exists in code the diff did NOT touch, surface it as `[parallel] file:line — same logic as <changed file:line>, not updated`. This catches changes applied to one path but missed in its twin. If no parallel paths exist, print nothing for this check.
+
 **Render findings** above the options menu once all spawned agents return:
 
-- Intermix all findings sorted by severity: `[CRITICAL]` → `[HIGH]` → `[gap:9+]` → `[gap:7-8]` → `[comment]`
+- Intermix all findings sorted by severity: `[CRITICAL]` → `[HIGH]` → `[parallel]` → `[gap:9+]` → `[gap:7-8]` → `[comment]`
 - Cap at 6 items total; if more: `(+N more — run /deep-review for full report)`
 - Always close with: `These are advisory. Proceeding to options.`
 - **If no findings across all spawned agents: print nothing.** Silence means clean — no false-confidence banner.
@@ -107,6 +109,7 @@ Example when findings exist:
 Quality scan complete.
 
 [CRITICAL] auth.ts:88 — Catch block swallows all errors without logging
+[parallel] adminAuth.ts:54 — same token-refresh logic as auth.ts:90, not updated
 [gap:9] UserService.ts:120 — createUser() has no test for the duplicate-email branch
 [comment] config.ts:15 — Comment says "reads from env" but code reads from hardcoded map
 
@@ -263,6 +266,7 @@ Quality scan runs before all options — always advisory, never blocking.
 - Clean up worktrees you didn't create (provenance check)
 - Run `git worktree remove` from inside the worktree
 - Block progression to the options menu based on quality scan output
+- Skip the parallel-change check — a change made in one path but not its sibling is a common, high-impact miss
 - Print a "no issues found" success message from the quality scan (false confidence)
 - Dispatch quality subagents sequentially — all applicable subagents must go in one message
 
