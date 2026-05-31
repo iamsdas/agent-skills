@@ -63,6 +63,8 @@ Prefer the most enforceable mechanism the defect allows. **Prose and checklists 
 
 Strength ranking: **hook > CLAUDE.md / project-local skill > memory.** Never rely on memory as a gate.
 
+**If the language's type system or compiler can be configured to reject the class outright** — a strictness flag (`strictNullChecks`, `noUncheckedIndexedAccess`), an exhaustiveness check, a stricter type — that beats any hook or lint rule. It is deterministic, needs no separate tool, and rejects the whole class at compile time. Reach for it first when the defect is a type-level mistake.
+
 ### Distribution check (do this before you pick "edit the skill")
 
 Skills, subagents, and reviewer prompts in this workflow are **distributed as a plugin**. That changes where a mechanism must live to persist:
@@ -77,7 +79,7 @@ Before writing any convention down, **inspect how this repo already enforces con
 
 ### 4. Place it — biased by where it was caught
 
-Install the mechanism at the **earliest** point that could have caught the defect. Where it was *actually* caught tells you which direction to shift left.
+Install the mechanism at the **earliest** point that could have caught the defect. Where it was *actually* caught tells you which direction to shift left. For typed languages the earliest point is not CI — it is the developer's **editor**, via compiler config (e.g. `tsconfig`): the error shows up as they type, before any commit or pipeline. Prefer that over a CI-only check when the defect is type-detectable.
 
 | Caught during | Push the mechanism into |
 |---|---|
@@ -91,6 +93,10 @@ These targets name the **plugin-source** path, for *universal* lessons. For a *p
 ### 5. Complete the capture
 
 Make the edit and commit it now. Do **not** present a menu and stop at "want me to do that?" — a lesson you described but did not institutionalize will recur. If the mechanism is non-obvious to pick, propose one and install it; iterate after.
+
+**Migration cost is not an escape hatch.** The strongest mechanism may surface pre-existing violations — flipping `strictNullChecks` can reveal dozens of existing errors. That cost is not a reason to fall back to a weaker, instant mechanism (a `CLAUDE.md` note). Adopt it in phases instead: enable it scoped to new/changed code, or turn it on and ratchet down the existing violations over follow-up commits. Install the strong mechanism now; pay the migration down over time.
+
+**Confirm before any global propagation.** "Complete the capture" means *install the mechanism* — local edits, project-local config, commits to the repo you are in. It does **not** authorize an outward-facing action that changes other people's setup. Publishing or releasing a plugin change so consumers **auto-update**, opening a marketplace PR, or anything that propagates beyond the current repo has a broad blast radius — **confirm with the user before triggering it.** Make the source edit and commit, then ask before you publish/release.
 
 ## Common Mistakes
 
