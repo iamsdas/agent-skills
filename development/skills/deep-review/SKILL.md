@@ -231,3 +231,7 @@ When you downgrade a finding via a cap, keep it in the report at its capped seve
 - Do not claim certainty without evidence from diffs, commits, or tests.
 - Flag assumptions explicitly.
 - Omit sections with nothing to report — a short, dense review is better than a padded one.
+
+## After the Review
+
+When the review surfaces a `[critical]` or `[high]` bug that was `introduced` on this branch — a defect the build/test process should have caught — invoke the `preventing-recurrence` sub-skill once findings are fixed. It routes the lesson into a durable mechanism (caught *at review* → shift the fix one phase up: build/TDD discipline, a new review lane, or a hook if the defect is script-detectable) so the class doesn't slip past build again.

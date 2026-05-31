@@ -180,6 +180,12 @@ State the correction factually and move on.
 
 When replying to inline review comments on GitHub, reply in the comment thread (`gh api repos/{owner}/{repo}/pulls/{pr}/comments/{id}/replies`), not as a top-level PR comment.
 
+## After a Confirmed Finding
+
+When a finding turns out to be a real bug or missing-logic gap — not just this instance, but a class that could recur — don't stop at fixing it.
+
+**REQUIRED SUB-SKILL:** Invoke `preventing-recurrence` to route the lesson into a durable mechanism (a hook, a skill/reviewer edit, a project instruction, or memory) so the same class is caught automatically next time. Tell it the defect was caught *at review* — that biases the fix one phase upstream (build/TDD, or a `deep-review` lane).
+
 ## The Bottom Line
 
 **External feedback = suggestions to evaluate, not orders to follow.**

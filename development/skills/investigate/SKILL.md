@@ -64,6 +64,8 @@ One sentence on confidence level. If medium or low, one sentence on what's missi
 **Test coverage**
 Two to three sentences: what tests currently cover this path, what's missing, and the exact test that should have caught this. Be specific — name the test file or describe the test case precisely.
 
+The missing test is one instance of preventing recurrence. If the diagnosis points to a *class* of defect that could recur beyond a single test gap, invoke the `preventing-recurrence` sub-skill to route the broader lesson (a hook, skill/reviewer edit, or project instruction) — and first grep for sibling code carrying the same defect.
+
 ## Investigation Workflow
 
 1. Check branch context first:

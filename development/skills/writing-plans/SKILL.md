@@ -64,6 +64,8 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Output:** User approves and exits plan mode to begin execution.
 
+**If review or the user's refinement exposed a *systemic* planning gap** — a class of case the plan dropped that the planning process should have surfaced (e.g. "we keep missing concurrency") — invoke the `preventing-recurrence` sub-skill. Tell it the gap was caught *at planning*, so the fix lands in the planning machinery (this skill or the plan reviewer prompt), not downstream.
+
 ---
 
 ## Output Format

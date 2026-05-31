@@ -47,6 +47,8 @@ requesting-code-review → deep-review → finishing-a-development-branch
 
 > **scope-requirements vs. investigate** — `investigate` looks *backward* (why is it broken?) and is the right entry point for a bug or error. `scope-requirements` looks *forward* (what should change?) and assumes you already know the desired behavior. For a bug, start with `investigate`; only reach for `scope-requirements` afterward if the fix involves real product decisions.
 
+> **preventing-recurrence (cross-cutting)** — not a phase but an *event handler*. Whenever a real defect or missing-logic gap is caught — during `writing-plans` refinement, `deep-review`, `receiving-code-review`, or `investigate` — those skills invoke `preventing-recurrence` to route the lesson into a durable mechanism (hook, skill/reviewer edit, project instruction, or memory) so the same class is caught automatically next time. It biases the fix toward the *earliest* point that could have caught the defect.
+
 ---
 
 ## Subagents (always passive)
