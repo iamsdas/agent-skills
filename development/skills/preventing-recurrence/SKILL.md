@@ -53,18 +53,27 @@ If it's a class, the twins already in the codebase are bugs too. Fix them in thi
 
 Prefer the most enforceable mechanism the defect allows. **Prose and checklists get skimmed; deterministic gates do not.**
 
-| Mechanism | Enforcement | Use when |
-|---|---|---|
-| **Hook / CI check / compiler flag / lint** | Deterministic — cannot be skipped | a script can detect the defect |
-| **Skill / subagent / reviewer-prompt edit** | Runs every flow, but relies on judgment | recurring class needing reasoning |
-| **CLAUDE.md / project instructions** | Always loaded, high priority | a durable "always/never" convention |
-| **Memory** | Soft recall, probabilistic | one non-obvious fact; backstop only |
+| Mechanism | Enforcement | Where it lives / persists | Use when |
+|---|---|---|---|
+| **Hook / CI check / compiler flag / lint** | Deterministic — cannot be skipped | consumer repo (`settings.json`, CI config, `tsconfig`) — survives plugin updates | a script can detect the defect |
+| **Project-local skill / hook** (`.claude/`) | Judgment or deterministic | consumer repo `.claude/` — survives plugin updates | a recurring **project-specific** class |
+| **CLAUDE.md / project instructions** | Always loaded, high priority | consumer repo — survives plugin updates | a durable project-specific "always/never" rule |
+| **Plugin skill / subagent / reviewer-prompt edit** | Runs every flow, but relies on judgment | **plugin source repo + republish/PR** — NOT the install cache | a **universal** workflow improvement for *all* projects |
+| **Memory** | Soft recall, probabilistic | per-project, agent-managed — survives | one non-obvious fact; backstop only |
 
-Strength ranking: **hook > CLAUDE.md / skill-or-reviewer edit > memory.** Never rely on memory as a gate.
+Strength ranking: **hook > CLAUDE.md / project-local skill > memory.** Never rely on memory as a gate.
 
-When the catch needs judgment and you'd reach for a skill edit, prefer the **automated reviewer/subagent lane** (fires every run) over **author-side prose** (the author skims their own checklist). Add both if you can; the reviewer lane is the real safety net.
+### Distribution check (do this before you pick "edit the skill")
 
-Before writing any convention down, **inspect how this repo already enforces conventions** (existing hooks, `CLAUDE.md`, reviewer prompts) — install into the existing machinery, don't invent a parallel doc no one reads.
+Skills, subagents, and reviewer prompts in this workflow are **distributed as a plugin**. That changes where a mechanism must live to persist:
+
+- **Never edit the installed copy** under `~/.claude/plugins/cache/...` — plugin auto-update overwrites it. The edit is silently lost.
+- A plugin skill/agent/prompt edit persists **only** if made in the **plugin source repo and republished** (or via a PR to the marketplace). It is also **global** — it changes the workflow for *every* project and does not reach consumers until they update.
+- So decide first: is the lesson **universal** (improve the shared tooling → plugin source + publish/PR) or **project-specific** (→ a consumer-repo mechanism: hook, project-local `.claude/` skill, `CLAUDE.md`, or memory)? **Most caught defects are project-specific** — keep them out of the shared plugin.
+
+When the catch needs judgment and a plugin edit is genuinely warranted (universal), prefer the **automated reviewer/subagent lane** (fires every run) over **author-side prose** (the author skims their own checklist). Add both if you can; the reviewer lane is the real safety net.
+
+Before writing any convention down, **inspect how this repo already enforces conventions** (existing hooks, `CLAUDE.md`, reviewer prompts, project-local skills) — install into the existing machinery, don't invent a parallel doc no one reads.
 
 ### 4. Place it — biased by where it was caught
 
@@ -76,6 +85,8 @@ Install the mechanism at the **earliest** point that could have caught the defec
 | Code review / `deep-review` | one phase up — build/TDD discipline, or a `deep-review` lane/subagent that catches it next time; **+ a hook if mechanical** |
 | Receiving external feedback | same as review, and confirm the reviewer actually had context |
 | `investigate` (shipped bug) | the missing test + earliest detection (already core to `investigate`) |
+
+These targets name the **plugin-source** path, for *universal* lessons. For a *project-specific* lesson, install the equivalent in the consumer repo at the same point in the flow — a project-local `.claude/` skill, a hook, or a scoped `CLAUDE.md` rule — never an edit to the shared plugin.
 
 ### 5. Complete the capture
 
@@ -91,6 +102,8 @@ Make the edit and commit it now. Do **not** present a menu and stop at "want me 
 | Pick prose when a hook is possible | Prefer the enforceable gate; prose gets skimmed. |
 | Author-side checklist as the whole fix | Add the automated reviewer/hook lane too. |
 | Write a doc without checking repo enforcement | Inspect existing hooks/CLAUDE.md/reviewer prompts first. |
+| Edit the installed plugin copy (`~/.claude/plugins/cache/...`) | Auto-update overwrites it. Edit the plugin source + republish, or use a consumer-repo mechanism. |
+| Put a project-specific lesson in the shared plugin | Plugin edits are global. Project-specific → `CLAUDE.md`/project-local `.claude/`/hook/memory. |
 
 ## The Bottom Line
 
