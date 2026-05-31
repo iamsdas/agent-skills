@@ -1,6 +1,6 @@
 ---
 name: scope-requirements
-description: "Runs a two-phase planning flow: first summarize user requirements and current behavior from an end-user product perspective, then ask expectation-refinement questions without implementation detail. Use when the user invokes /scope-requirements or asks for structured requirement clarification before implementation planning."
+description: "Restates a request in product terms, explores current behavior with subagents, then asks expectation-refinement questions without implementation detail. Use when the user invokes /scope-requirements or asks for structured requirement clarification before implementation planning."
 disable-model-invocation: true
 ---
 
@@ -14,28 +14,37 @@ Use this skill to prevent premature implementation planning. First align on prod
 
 1. Restate the request in product terms:
    - Summarize desired outcome for end users.
-   - Summarize current behavior or baseline behavior, if available, using a `code-explorer` subagent to trace relevant code paths.
-   - Highlight gaps between current and desired behavior.
+   - Highlight, at a high level, what you already know versus what is still unknown.
 
-2. Refine expectations without implementation details:
-   - Ask focused clarification questions about outcomes, scope, constraints, and acceptance signals.
+2. Explore the current state with subagents:
+   - Dispatch `code-explorer` subagents to trace relevant code paths and establish current/baseline behavior.
+   - Use exploration to surface — not to ask — the following, so the questions in step 3 are informed rather than guesses:
+     - Current behavior and the gap between current and desired behavior.
+     - Related or dependent logic that may also need to change as a consequence of this request.
+     - Hidden assumptions and likely failure modes implied by the existing code.
+     - Whether the request touches a migration (data, API, workflow, or platform).
+   - Resolve anything answerable from the codebase here, via subagents — never carry it into the question phase.
+   - Run independent explorations in parallel; consolidate their findings before moving on.
+
+3. Refine expectations without implementation details:
+   - Ask focused clarification questions about outcomes, scope, constraints, and acceptance signals — informed by the exploration findings.
    - Understand how the new change is meant to be used — who triggers it, in what context, and what the expected interaction flow looks like.
-   - Surface hidden assumptions, identify failure modes early and validate non-functional requirements.
-   - If the request involves a migration (data, API, workflow, or platform), explicitly ask whether backward compatibility is required.
-   - Identify related or dependent logic that may also need to change as a consequence of this request, and ask the user whether those areas are in scope.
+   - Validate non-functional requirements and confirm the assumptions and failure modes surfaced during exploration.
+   - If exploration found a migration (data, API, workflow, or platform), explicitly ask whether backward compatibility is required.
+   - For related or dependent logic surfaced during exploration, ask the user whether those areas are in scope.
    - Do not discuss architecture, code structure, libraries, or low-level technical steps.
    - Keep questions practical and decision-oriented.
    - Keep asking questions one at a time till you reach a shared understanding of the request with the user.
-   - Do not ask questions that can be answered by searching the codebase.
+   - Do not ask questions that can be answered by searching the codebase — explore first (step 2), ask only what the code cannot answer.
    - Use the `AskUserQuestion` tool to present each question interactively with selectable options. Do NOT list questions as plain markdown text — always invoke AskUserQuestion so the user gets a clickable UI. Include 2–4 options per question; the tool automatically adds an "Other" option for freeform input. You may batch up to 4 related questions in a single AskUserQuestion call when they are independent of each other.
 
-3. Confirm readiness:
+4. Confirm readiness:
    - Present a concise "understanding so far" recap.
    - Before offering confirmation, review all open questions surfaced during refinement. If any remain unresolved, ask them now — do not proceed to confirmation while unknowns exist.
    - Use AskUserQuestion to ask if the scope is complete, with options like "Yes, scope is complete" and "No, keep refining".
    - If user does not confirm, continue refinement.
 
-4. Output the final scope document:
+5. Output the final scope document:
    - Once the user confirms the scope is complete, produce the final document using the template below.
    - Output it as rendered markdown (no fenced code block, no preamble, no trailing commentary) so it renders with headers and formatting in the CLI.
    - Do NOT switch to planning mode. Do NOT write implementation steps.
