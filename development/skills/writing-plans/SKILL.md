@@ -20,7 +20,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 - **Announce:** Write exactly one line before starting: "I'm using the writing-plans skill to create the implementation plan."
 - **Task tracking:** Before starting, create one task per phase using TaskCreate. Mark each task `in_progress` when beginning it, `completed` when done. This renders a live-updating checklist for the user.
 - **Sequential:** Run phases in order. Each must complete before the next begins.
-- **Subagent driven execution:** use the subagent-driven-development skill for execution once user is ready.
+- **Never execute the plan yourself.** This skill *writes* the plan; it does not build. After the plan is approved, hand off to the `subagent-driven-development` skill (Phase 6) — do not start editing files, writing tests, or running the plan's steps in this conversation.
 
 ---
 
@@ -62,9 +62,24 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Task:** Enter plan mode via `EnterPlanMode`. Write the full plan document directly to the plan file path provided by plan mode (shown in the plan mode system message). A review hook fires automatically after the Write — address any feedback before calling `ExitPlanMode`.
 
-**Output:** User approves and exits plan mode to begin execution.
+**Output:** User approves and exits plan mode.
 
-**If review or the user's refinement exposed a *systemic* planning gap** — a class of case the plan dropped that the planning process should have surfaced (e.g. "we keep missing concurrency") — invoke the `preventing-recurrence` sub-skill. Tell it the gap was caught *at planning*, so the fix lands in the planning machinery (this skill or the plan reviewer prompt), not downstream.
+---
+
+### 6. Hand Off to Execution
+
+**This phase runs *after* plan mode has exited.** Both steps below modify files — `preventing-recurrence` edits the planning machinery, and execution builds the code — so neither can run inside plan mode. Phase 5 ends at `ExitPlanMode`; only then does this phase begin.
+
+**Do not start building.** Writing the plan is the end of *this* skill's job. The moment the plan is approved, STOP and hand off — even though the plan's tasks list exact files, TDD steps, and commit commands, you do not run them yourself in this conversation.
+
+**Task:**
+
+1. **First, check for a systemic planning gap.** If review or the user's refinement exposed a *systemic* gap — a class of case the plan dropped that the planning process should have surfaced (e.g. "we keep missing concurrency") — invoke the `preventing-recurrence` sub-skill before handing off. Tell it the gap was caught *at planning*, so the fix lands in the planning machinery (this skill or the plan reviewer prompt), not downstream.
+2. **Then hand off execution.** Invoke the `subagent-driven-development` skill to execute the approved plan (or `executing-plans` if the user wants a separate parallel session). That skill dispatches a fresh subagent per task with review checkpoints — it is what actually builds.
+
+**Output:** Execution begins under `subagent-driven-development`, not under this skill.
+
+**Red flag — STOP if you catch yourself:** opening a file to edit, writing a test, or running a plan step right after approval. That means you skipped the handoff. Invoke `subagent-driven-development` instead.
 
 ---
 
