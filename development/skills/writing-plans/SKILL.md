@@ -20,31 +20,48 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 - **Announce:** Write exactly one line before starting: "I'm using the writing-plans skill to create the implementation plan."
 - **Task tracking:** Before starting, create one task per phase using TaskCreate. Mark each task `in_progress` when beginning it, `completed` when done. This renders a live-updating checklist for the user.
 - **Sequential:** Run phases in order. Each must complete before the next begins.
+- **Two routes — pick in Phase 1.** Don't fan out by default. The full multi-agent path (Phases 2–4) is for large or unfamiliar work; for small, well-understood changes take the **fast path** (one combined pass). Phase 1 presents its scope read and lets the user choose. Over-provisioning agents on a localized change is the main reason planning feels slow.
 - **Never execute the plan yourself.** This skill *writes* the plan; it does not build. After the plan is approved, hand off to the `subagent-driven-development` skill (Phase 6) — do not start editing files, writing tests, or running the plan's steps in this conversation.
 
 ---
 
 ## Phases
 
-### 1. Scope Check
+### 1. Scope Check & Route
 
-**Task:** Determine if the spec covers multiple independent subsystems. Each plan should produce working, testable software on its own.
+**Task:** Two things. First, determine if the spec covers multiple independent subsystems — each plan should produce working, testable software on its own; propose a split if so. Second, do a quick scope read and choose the route:
 
-**Output:** Confirm single plan, or propose a split into sub-plans with one per subsystem.
+- **Which subsystem(s)** the change touches and a rough file count.
+- **Whether the approach is obvious** (clear where the code goes, an established pattern to follow, no real design fork) or has **genuine ambiguity** (multiple viable architectures, unfamiliar area, cross-cutting impact).
+
+Present that read to the user in 2-3 lines and ask them to choose, recommending one:
+
+- **Fast path** — small, localized, approach is obvious. Skips the parallel fan-out (Phase 2 collapses to a single combined pass; Phase 3's architecture tournament is skipped). Use for most single-subsystem changes.
+- **Thorough path** — large, unfamiliar, or design ambiguity worth comparing approaches. Runs the full multi-agent Phases 2–4.
+
+Use `AskUserQuestion`. Default the recommendation to Fast unless the scope read surfaced real ambiguity or breadth.
+
+**Output:** Single-vs-split decision, the scope read, and the user's route choice.
 
 ---
 
 ### 2. Codebase Exploration
 
-**Task:** Launch 2-3 code-explorer agents in parallel. Each targets a different aspect (e.g. similar features, high-level architecture, control flow). Each reads 5-10 key files and traces abstractions end-to-end. One explorer MUST enumerate every parallel/duplicate implementation and all call sites of the code being changed — sibling handlers, the same operation for a different entity or platform, copy-pasted branches — so no path that needs the same change is missed.
+Scale the agent count to the route — do not fan out wider than the task needs.
 
-**Output:** Comprehensive summary of existing patterns and architecture relevant to this task, including a list of every parallel implementation or sibling call site that must change in lockstep with the primary change (file:line each).
+**Fast path:** Launch **one** code-explorer (or read the relevant files yourself if it's a handful) targeting the change site and its immediate patterns. It MUST still enumerate every parallel/duplicate implementation and call site of the code being changed (sibling handlers, the same operation for another entity/platform, copy-pasted branches) — that completeness check is non-negotiable on either route. Then go straight to Phase 4 (Phase 3 is skipped on the fast path).
+
+**Thorough path:** Launch **2-3** code-explorer agents in parallel, each targeting a different aspect (e.g. similar features, high-level architecture, control flow), each reading 5-10 key files and tracing abstractions end-to-end. One explorer MUST do the parallel-implementation/call-site enumeration above.
+
+**Output:** Summary of existing patterns and architecture relevant to this task, including every parallel implementation or sibling call site that must change in lockstep (file:line each).
 
 ---
 
 ### 3. Architecture Design
 
-**Task:** Launch 2-3 code-architect agents in parallel with different focuses — minimal changes (smallest change, maximum reuse), clean architecture (maintainability, elegant abstractions), or pragmatic balance (speed + quality). Pass each architect the exploration summary from step 2 (patterns, parallel implementations, and call sites) — the architects design the high-level approach and build on those findings rather than re-tracing the codebase themselves. In the same batch, launch one `code-simplifier` agent (analysis only — it must not edit) to identify simplification opportunities the change opens up: dead code or branches the change makes unreachable, duplication that can now be consolidated, and abstractions that can be collapsed. Review all approaches and form a recommendation.
+**Skip this phase entirely on the fast path** — go to Phase 4.
+
+**Thorough path:** Launch 2-3 code-architect agents in parallel with different focuses — minimal changes (smallest change, maximum reuse), clean architecture (maintainability, elegant abstractions), or pragmatic balance (speed + quality). Pass each architect the exploration summary from Phase 2 (patterns, parallel implementations, call sites) — they design the high-level approach on those findings rather than re-tracing the codebase. **Only if** the change plausibly makes existing code dead or consolidatable, add one `code-simplifier` agent to the same batch (analysis only — it must not edit) to flag dead branches, duplication to consolidate, and abstractions to collapse; skip it when the change is purely additive. Review all approaches and form a recommendation.
 
 **Output:** Brief summary of each approach, trade-offs comparison, recommendation with reasoning, and any simplification opportunities worth folding into the plan. Present to user and wait for confirmation before continuing.
 
