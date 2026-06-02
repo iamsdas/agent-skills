@@ -5,7 +5,7 @@ description: Use when the user provides a Notion task ID (e.g. ITEM-11153) and w
 
 # Setup Task
 
-Bootstrap work on a Notion ticket: fetch the ticket, create an isolated worktree on a fresh branch off latest main, scope the requirements, sync any new findings back to the ticket, then write an implementation plan.
+Bootstrap work on a Notion ticket: fetch the ticket, create an isolated worktree on a fresh branch off latest main, scope the requirements, and sync any new findings back to the ticket — then hand off to implementation planning.
 
 ## Input
 
@@ -38,10 +38,7 @@ A Notion task ID passed as the argument (e.g. `ITEM-11153`). If missing, ask for
    - If it does, update the ticket — **REQUIRED SUB-SKILL:** use `utilities:update-notion` with the merged content.
    - If the ticket already covered everything, skip the update and say so.
 
-6. **Write the implementation plan** — **REQUIRED SUB-SKILL:** use `development:writing-plans`, working inside the worktree.
-   - Feed it the scoped requirements from step 4 as the spec.
-
-7. **Report** — print the worktree path, branch name, the plan location, and a one-line note on whether the ticket was updated.
+6. **Report and hand off** — print the worktree path, branch name, and a one-line note on whether the ticket was updated. Then invoke `development:writing-plans` with the scoped requirements from step 4 as the spec — setup is done; planning is the next phase and runs inside the worktree.
 
 ## Common Mistakes
 
@@ -49,4 +46,4 @@ A Notion task ID passed as the argument (e.g. `ITEM-11153`). If missing, ask for
 - **Skipping the fetch** — a stale local `origin/main` means the worktree starts behind.
 - **Always updating the ticket** — only update when scoping added material new information; trivial rewording is noise for the ticket's watchers.
 - **Replacing the ticket body wholesale** — `update-notion` already handles preserving media/context; still, merge new info into the existing structure rather than overwriting it.
-- **Stopping after the ticket sync** — the workflow isn't done until the implementation plan is written; the Notion update is a side effect, not the goal.
+- **Stopping after the ticket sync** — always end by handing off to `development:writing-plans`; the Notion update is a side effect, not the goal.
