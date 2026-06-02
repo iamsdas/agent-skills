@@ -26,7 +26,7 @@ A Notion task ID passed as the argument (e.g. `ITEM-11153`). If missing, ask for
 3. **Create a worktree** — **REQUIRED SUB-SKILL:** use `development:using-git-worktrees`.
    - Branch name format: `<user_name>/<task_summary_snake_case>`
      - `<user_name>`: local part of `git config user.email` (e.g. `surya@fused.io` → `surya`); fall back to `whoami`.
-     - `<task_summary_snake_case>`: ticket title lowercased, articles/prepositions/filler dropped, first ≤3 remaining words joined with `_` (e.g. "Fix login redirect loop on Safari" → `fix_login_redirect`, "Add rate limiting to the export API" → `add_rate_limiting`).
+     - `<task_summary_snake_case>`: a 3-word snake_case summary that captures the essence of the ticket — pick the most meaningful words from the title, not necessarily in order (e.g. "Fix login redirect loop on Safari" → `fix_safari_redirect`, "Add rate limiting to the export API" → `rate_limit_export`).
    - Worktree directory name: the task ID as-is (e.g. `ITEM-11153`).
    - Base the branch on `origin/main`, not the current branch.
 
