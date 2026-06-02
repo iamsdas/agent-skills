@@ -23,7 +23,21 @@ A Notion task ID passed as the argument (e.g. `ITEM-11153`). If missing, ask for
    - `git fetch origin main` from the repo root.
    - Do NOT check out main in the current workspace — the worktree in step 3 is created from `origin/main` directly.
 
-3. **Create a worktree** — **REQUIRED SUB-SKILL:** use `development:using-git-worktrees`.
+3. **Set up the workspace**
+   - **First check whether you are already in a clean worktree** — reuse it instead of creating another:
+     ```bash
+     GIT_DIR=$(cd "$(git rev-parse --git-dir)" && pwd -P)
+     GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" && pwd -P)
+     # In a linked worktree? (submodules also have GIT_DIR != GIT_COMMON — exclude them)
+     if [ "$GIT_DIR" != "$GIT_COMMON" ] && [ -z "$(git rev-parse --show-superproject-working-tree)" ]; then
+       IN_WORKTREE=yes
+     fi
+     # Clean? (no uncommitted changes)
+     [ -z "$(git status --porcelain)" ] && CLEAN=yes
+     ```
+   - **If in a worktree and clean:** do NOT create a new one. Just create the branch in place: `git switch -c <branch_name> origin/main`. Skip the worktree directory naming below.
+   - **If in a worktree but dirty:** ask the user whether to reuse it anyway or create a fresh one. If reuse: stash or commit the changes per the user's preference, then `git switch -c <branch_name> origin/main`.
+   - **Otherwise, create a worktree** — **REQUIRED SUB-SKILL:** use `development:using-git-worktrees`.
    - Branch name format: `<user_name>/<task_summary_snake_case>`
      - `<user_name>`: local part of `git config user.email` (e.g. `surya@fused.io` → `surya`); fall back to `whoami`.
      - `<task_summary_snake_case>`: a 3-word snake_case summary that captures the essence of the ticket — pick the most meaningful words from the title, not necessarily in order (e.g. "Fix login redirect loop on Safari" → `fix_safari_redirect`, "Add rate limiting to the export API" → `rate_limit_export`).
@@ -43,6 +57,8 @@ A Notion task ID passed as the argument (e.g. `ITEM-11153`). If missing, ask for
 
 ## Common Mistakes
 
+- **Creating a nested worktree when already in one** — step 3's clean-worktree check exists precisely to avoid this; reuse the worktree and just switch to a fresh branch off `origin/main`.
+- **Reusing a dirty worktree silently** — uncommitted changes would bleed into the new branch; ask the user first.
 - **Checking out main locally before branching** — pollutes the current workspace; branch the worktree from `origin/main` instead.
 - **Skipping the fetch** — a stale local `origin/main` means the worktree starts behind.
 - **Always updating the ticket** — only update when scoping added material new information; trivial rewording is noise for the ticket's watchers.
