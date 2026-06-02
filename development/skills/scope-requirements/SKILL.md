@@ -1,7 +1,6 @@
 ---
 name: scope-requirements
 description: "Restates a request in product terms, explores current behavior with subagents, then asks expectation-refinement questions without implementation detail. Use when the user invokes /scope-requirements or asks for structured requirement clarification before implementation planning."
-disable-model-invocation: true
 ---
 
 # Scope Requirements
