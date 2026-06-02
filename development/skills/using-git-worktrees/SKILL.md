@@ -139,26 +139,6 @@ Tests passing (<N> tests, 0 failures)
 Ready to implement <feature-name>
 ```
 
-## Step 5: Cleanup When Work Concludes
-
-**Applies only to worktrees you created via the git fallback (Step 1b).** Native worktree tools (e.g., `claude -w` / `EnterWorktree`) prompt the user about keep/delete themselves — never duplicate that prompt, and never `git worktree remove` a natively managed worktree.
-
-When the work in the worktree concludes (merged, PR opened, or abandoned), ask the user before exiting:
-
-> "Work is complete. Should I delete the worktree at `<path>`, or keep it?"
-
-**If delete:**
-
-```bash
-cd "$MAIN_CHECKOUT"                  # leave the worktree first
-git worktree remove "$path"          # add --force only if user confirms discarding changes
-git branch -d "$BRANCH_NAME"         # only if merged; ask before -D on unmerged
-```
-
-**If keep:** Report the worktree path and branch so the user can return to it later.
-
-**Never delete without asking** — uncommitted work or an unmerged branch may still be needed.
-
 ## Quick Reference
 
 | Situation | Action |
@@ -176,8 +156,6 @@ git branch -d "$BRANCH_NAME"         # only if merged; ask before -D on unmerged
 | Permission error on create | Sandbox fallback, work in place |
 | Tests fail during baseline | Report failures + ask |
 | No package.json/Cargo.toml | Skip dependency install |
-| Work concludes (fallback worktree) | Ask delete or keep (Step 5) |
-| Work concludes (native worktree) | Let the harness prompt; do nothing |
 
 ## Common Mistakes
 
@@ -215,8 +193,6 @@ git branch -d "$BRANCH_NAME"         # only if merged; ask before -D on unmerged
 - Create worktree without verifying it's ignored (project-local)
 - Skip baseline test verification
 - Proceed with failing tests without asking
-- Delete a worktree (or its branch) without asking the user first
-- Leave a fallback worktree behind silently when work concludes — always offer delete/keep
 
 **Always:**
 - Run Step 0 detection first
