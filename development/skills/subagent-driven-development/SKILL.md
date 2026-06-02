@@ -5,11 +5,11 @@ description: Use when executing implementation plans with independent tasks in t
 
 # Subagent-Driven Development
 
-Execute plan by dispatching fresh subagent per task, with two-stage review after each: spec compliance review first, then code quality review.
+Execute plan by dispatching fresh subagent per task, with parallel review after each: spec compliance and code quality reviewers run simultaneously.
 
 **Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
 
-**Core principle:** Fresh subagent per task + two-stage review (spec then quality) = high quality, fast iteration
+**Core principle:** Fresh subagent per task + parallel review (spec and quality simultaneously) = high quality, fast iteration
 
 **Continuous execution:** Do not pause to check in with your human partner between tasks. Execute all tasks from the plan without stopping. The only reasons to stop are: BLOCKED status you cannot resolve, ambiguity that genuinely prevents progress, or all tasks complete. "Should I continue?" prompts and progress summaries waste their time — they asked you to execute the plan, so execute it.
 
@@ -36,7 +36,7 @@ digraph when_to_use {
 **vs. Executing Plans (parallel session):**
 - Same session (no context switch)
 - Fresh subagent per task (no context pollution)
-- Two-stage review after each task: spec compliance first, then code quality
+- Parallel review after each task: spec compliance and code quality simultaneously
 - Faster iteration (no human-in-loop between tasks)
 
 ## The Process
@@ -51,12 +51,9 @@ digraph process {
         "Implementer subagent asks questions?" [shape=diamond];
         "Answer questions, provide context" [shape=box];
         "Implementer subagent implements, tests, commits, self-reviews" [shape=box];
-        "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [shape=box];
-        "Spec reviewer subagent confirms code matches spec?" [shape=diamond];
-        "Implementer subagent fixes spec gaps" [shape=box];
-        "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [shape=box];
-        "Code quality reviewer subagent approves?" [shape=diamond];
-        "Implementer subagent fixes quality issues" [shape=box];
+        "Dispatch spec reviewer + code quality reviewer in parallel" [shape=box];
+        "Both reviewers approve?" [shape=diamond];
+        "Implementer subagent fixes issues from both reviewers" [shape=box];
         "Mark task complete in TodoWrite" [shape=box];
     }
 
@@ -70,15 +67,11 @@ digraph process {
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Implementer subagent asks questions?" -> "Implementer subagent implements, tests, commits, self-reviews" [label="no"];
-    "Implementer subagent implements, tests, commits, self-reviews" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)";
-    "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" -> "Spec reviewer subagent confirms code matches spec?";
-    "Spec reviewer subagent confirms code matches spec?" -> "Implementer subagent fixes spec gaps" [label="no"];
-    "Implementer subagent fixes spec gaps" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="re-review"];
-    "Spec reviewer subagent confirms code matches spec?" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="yes"];
-    "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
-    "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
-    "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
-    "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
+    "Implementer subagent implements, tests, commits, self-reviews" -> "Dispatch spec reviewer + code quality reviewer in parallel";
+    "Dispatch spec reviewer + code quality reviewer in parallel" -> "Both reviewers approve?";
+    "Both reviewers approve?" -> "Implementer subagent fixes issues from both reviewers" [label="no"];
+    "Implementer subagent fixes issues from both reviewers" -> "Dispatch spec reviewer + code quality reviewer in parallel" [label="re-review"];
+    "Both reviewers approve?" -> "Mark task complete in TodoWrite" [label="yes"];
     "Mark task complete in TodoWrite" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
@@ -90,9 +83,9 @@ digraph process {
 
 Implementer subagents report one of four statuses. Handle each appropriately:
 
-**DONE:** Proceed to spec compliance review.
+**DONE:** Dispatch spec reviewer and code quality reviewer in parallel.
 
-**DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and proceed to review.
+**DONE_WITH_CONCERNS:** The implementer completed the work but flagged doubts. Read the concerns before proceeding. If the concerns are about correctness or scope, address them before review. If they're observations (e.g., "this file is getting large"), note them and dispatch reviewers in parallel.
 
 **NEEDS_CONTEXT:** The implementer needs information that wasn't provided. Provide the missing context and re-dispatch.
 
@@ -119,15 +112,15 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 Task 1:
   [Dispatch implementer → answers any questions → implements, tests, commits]
-  [Dispatch spec reviewer → ✅ compliant]
-  [Dispatch code quality reviewer → ✅ approved]
+  [Dispatch spec reviewer + code quality reviewer in parallel → both ✅]
   [Mark Task 1 complete]
 
 Task 2:
   [Dispatch implementer → implements, commits]
-  [Dispatch spec reviewer → ❌ missing progress reporting, extra --json flag]
-  [Implementer fixes → spec reviewer re-reviews → ✅]
-  [Dispatch code quality reviewer → magic number issue → implementer fixes → ✅]
+  [Dispatch spec reviewer + code quality reviewer in parallel]
+    spec reviewer → ❌ missing progress reporting
+    code quality reviewer → ❌ magic number issue
+  [Implementer fixes both → re-dispatch both reviewers in parallel → both ✅]
   [Mark Task 2 complete]
 
 ...
@@ -146,10 +139,9 @@ Task 2:
 - Skip scene-setting context (subagent needs to understand where task fits)
 - Ignore subagent questions (answer before letting them proceed)
 - Accept "close enough" on spec compliance (spec reviewer found issues = not done)
-- Skip review loops (reviewer found issues = implementer fixes = review again)
+- Skip review loops (reviewer found issues = implementer fixes = re-review both)
 - Let implementer self-review replace actual review (both are needed)
-- **Start code quality review before spec compliance is ✅** (wrong order)
-- Move to next task while either review has open issues
+- Move to next task while either reviewer has open issues
 
 **If subagent asks questions:**
 - Answer clearly and completely
