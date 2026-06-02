@@ -70,7 +70,7 @@ The missing test is one instance of preventing recurrence. If the diagnosis poin
 
 1. Check branch context first:
    - Determine the current git branch.
-   - If branch is not `main`, ask the user whether the issue is tied to this branch's changes.
+   - If branch is not `main`, ask the user whether the issue is tied to this branch's changes — and include context in the question: name the branch and give a one-line summary of what it changes, so the user can actually answer.
    - If user confirms yes, explicitly track this as `Branch context` and prioritize code paths changed on that branch during diagnosis.
    - If user says no, proceed as usual without branch-scoped assumptions.
    - For branch context, summarize the branch changes using a `code-explorer` subagent asked to respond as a caveman (terse summary).
@@ -105,6 +105,7 @@ The missing test is one instance of preventing recurrence. If the diagnosis poin
 ## Quality Bar
 
 - Be concrete; avoid generic "could be many things" phrasing.
+- Present the diagnosis before asking the user anything about fixes, mitigations, or next steps. Any mid-investigation question must state the finding or evidence that prompted it — never ask the user to weigh in on a problem they haven't been shown yet.
 - Anchor every claim to either a log detail or a code snippet.
 - Keep user-impact language understandable to non-developers.
 - If evidence is weak, say so explicitly and lower confidence.

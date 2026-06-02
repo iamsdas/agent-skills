@@ -26,6 +26,8 @@ Use this skill to prevent premature implementation planning. First align on prod
    - Run independent explorations in parallel; consolidate their findings before moving on.
 
 3. Refine expectations without implementation details:
+   - **Present findings before asking anything.** Before the first question, share a short "What I found" summary of the exploration: current behavior, the gap, and each assumption, risk, or dependency you intend to ask about — with a one-line plain-language explanation of why it matters. Never ask about a problem, edge case, or mitigation the user has not yet been shown.
+   - Every question must be self-contained: state the finding that motivated it (in the question text or the option descriptions), then ask. "Exploration found X, which means Y could happen — how should it behave?" — not "How should we handle Y?".
    - Ask focused clarification questions about outcomes, scope, constraints, and acceptance signals — informed by the exploration findings.
    - Understand how the new change is meant to be used — who triggers it, in what context, and what the expected interaction flow looks like.
    - Validate non-functional requirements and confirm the assumptions and failure modes surfaced during exploration.
@@ -56,6 +58,7 @@ Use this skill to prevent premature implementation planning. First align on prod
 - Only target backward compatibility when the user explicitly requires it; do not assume it by default.
 - Treat confirmation as required, not optional.
 - Never offer the "scope is complete" confirmation while open questions remain — resolve them first.
+- Never ask a question whose motivating context the user hasn't seen. Surface the finding first, then ask.
 
 ## Response Template
 
@@ -67,9 +70,14 @@ Use this structure in the pre-confirmation phase:
 - Desired user outcome: ...
 - Current behavior: ... / Unknown
 - Behavior gap: ...
+
+## What I Found
+
+- **<Finding>**: <what exploration surfaced, where, and why it matters to this request — plain language>
+- **<Assumption / risk>**: <the assumption or failure mode, and what it implies for the user>
 ```
 
-Then immediately invoke AskUserQuestion with up to 4 clarifying questions (batch independent ones together):
+Every finding, assumption, or risk you plan to question the user about MUST appear in "What I Found" first. Only then invoke AskUserQuestion with up to 4 clarifying questions (batch independent ones together), each referencing its finding:
 
 ```
 AskUserQuestion(questions=[
