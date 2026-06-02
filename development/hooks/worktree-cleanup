@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+# Stop hook: when working in a manually created git worktree and the work
+# appears concluded, prompt Claude to ask the user whether to delete or keep
+# the worktree (mirrors the native `claude -w` exit prompt).
+#
+# Fires only when ALL of these hold:
+#   - cwd is inside a linked worktree (not the main checkout, not a submodule)
+#   - the worktree lives under a .worktrees/ or worktrees/ directory
+#     (the manual-fallback convention; harness-native worktrees prompt themselves)
+#   - the working tree is clean
+#   - work looks concluded: HEAD is merged into the default branch, or the
+#     branch is pushed and up to date with its upstream
+#   - we haven't already prompted for this session + worktree + HEAD
+set -euo pipefail
+
+command -v jq >/dev/null 2>&1 || exit 0
+input=$(cat)
+
+# Don't re-block if a Stop hook already blocked this stop (avoids loops)
+[ "$(echo "$input" | jq -r '.stop_hook_active // false')" = "true" ] && exit 0
+
+cwd=$(echo "$input" | jq -r '.cwd // empty')
+session_id=$(echo "$input" | jq -r '.session_id // "no-session"')
+[ -n "$cwd" ] && [ -d "$cwd" ] || exit 0
+cd "$cwd" 2>/dev/null || exit 0
+
+git_dir=$(git rev-parse --git-dir 2>/dev/null) || exit 0
+common_dir=$(git rev-parse --git-common-dir 2>/dev/null) || exit 0
+git_dir=$(cd "$git_dir" 2>/dev/null && pwd -P) || exit 0
+common_dir=$(cd "$common_dir" 2>/dev/null && pwd -P) || exit 0
+
+# Main checkout, or a submodule — nothing to clean up
+[ "$git_dir" = "$common_dir" ] && exit 0
+[ -n "$(git rev-parse --show-superproject-working-tree 2>/dev/null)" ] && exit 0
+
+# Only manually created fallback worktrees; native ones prompt on their own
+top=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+case "$top" in
+  */.worktrees/*|*/worktrees/*) ;;
+  *) exit 0 ;;
+esac
+
+# Uncommitted changes => work still in progress
+[ -z "$(git status --porcelain 2>/dev/null)" ] || exit 0
+
+head=$(git rev-parse HEAD 2>/dev/null) || exit 0
+
+# "Concluded" heuristic: merged into the default branch, or pushed upstream
+concluded=""
+default_branch=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|^origin/||') || true
+for ref in ${default_branch:+origin/$default_branch} ${default_branch:+$default_branch} main master; do
+  if git rev-parse --verify --quiet "$ref" >/dev/null 2>&1 \
+     && git merge-base --is-ancestor "$head" "$ref" 2>/dev/null; then
+    concluded="merged into $ref"
+    break
+  fi
+done
+if [ -z "$concluded" ]; then
+  upstream=$(git rev-parse --verify --quiet '@{u}' 2>/dev/null) || true
+  [ -n "$upstream" ] && [ "$upstream" = "$head" ] && concluded="pushed and up to date with its upstream"
+fi
+[ -n "$concluded" ] || exit 0
+
+# Prompt once per session + worktree + HEAD (new commits re-arm the prompt)
+marker_key=$(printf '%s' "$top" | cksum | awk '{print $1}')
+marker="${TMPDIR:-/tmp}/claude-worktree-prompt-${session_id}-${marker_key}-${head:0:12}"
+[ -f "$marker" ] && exit 0
+touch "$marker" 2>/dev/null || true
+
+branch=$(git branch --show-current 2>/dev/null || echo "detached HEAD")
+
+jq -n --arg top "$top" --arg branch "$branch" --arg concluded "$concluded" '{
+  decision: "block",
+  reason: ("You are working in a manually created git worktree at \($top) (branch: \($branch)), and it appears the work is concluded (\($concluded)). Before finishing, ask the user whether to delete this worktree or keep it. If they choose delete: cd to the main checkout, run `git worktree remove` (never --force without explicit confirmation), and offer to delete the branch only if it is merged. If they choose keep: report the worktree path and branch and finish. If the user already answered this question this session, or work is actually still in progress, just finish your response normally — do not delete anything without the user explicitly agreeing.")
+}'
+exit 0
