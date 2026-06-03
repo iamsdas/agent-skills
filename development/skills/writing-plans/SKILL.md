@@ -65,6 +65,8 @@ Scale the agent count to the route — do not fan out wider than the task needs.
 
 **Output:** Brief summary of each approach, trade-offs comparison, recommendation with reasoning, and any simplification opportunities worth folding into the plan. Present to user and wait for confirmation before continuing.
 
+**HARD GATE: do NOT ask the user to pick an approach (via AskUserQuestion or otherwise) until the per-approach summaries and trade-offs have been output as visible text in the conversation.** Labels like "Approach A/B/C" mean nothing to the user on their own — each option must have already been described (what it changes, its key trade-off) before any selection question, and the question's option descriptions must restate the one-line essence of each approach. The architects' raw outputs are in your context, not the user's — having read them is not a substitute for showing the comparison.
+
 ---
 
 ### 4. File Structure
