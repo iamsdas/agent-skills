@@ -38,7 +38,7 @@ A Notion task ID passed as the argument (e.g. `ITEM-11153`). If missing, ask for
      ```
    - **If in a worktree and clean:** do NOT create a new one. Just create the branch in place: `git switch -c <branch_name> origin/main`. Skip the worktree directory naming below.
    - **If in a worktree but dirty:** ask the user whether to reuse it anyway or create a fresh one. If reuse: stash or commit the changes per the user's preference, then `git switch -c <branch_name> origin/main`.
-   - **Otherwise, create a worktree** — **REQUIRED SUB-SKILL:** use `development:using-git-worktrees`.
+   - **Otherwise, create a worktree** — **REQUIRED SUB-SKILL:** use `development:using-git-worktrees`. The worktree directory MUST be named after the task ID (e.g. `.worktrees/ITEM-11153`) — override any default naming the sub-skill would otherwise apply (such as naming it after the branch).
    - Branch name format: `<user_name>/<task_summary_snake_case>`
      - `<user_name>`: local part of `git config user.email` (e.g. `surya@fused.io` → `surya`); fall back to `whoami`.
      - `<task_summary_snake_case>`: a 3-word snake_case summary that captures the essence of the ticket — pick the most meaningful words from the title, not necessarily in order (e.g. "Fix login redirect loop on Safari" → `fix_safari_redirect`, "Add rate limiting to the export API" → `rate_limit_export`).
@@ -62,6 +62,7 @@ A Notion task ID passed as the argument (e.g. `ITEM-11153`). If missing, ask for
 - **Creating a nested worktree when already in one** — step 3's clean-worktree check exists precisely to avoid this; reuse the worktree and just switch to a fresh branch off `origin/main`.
 - **Reusing a dirty worktree silently** — uncommitted changes would bleed into the new branch; ask the user first.
 - **Checking out main locally before branching** — pollutes the current workspace; branch the worktree from `origin/main` instead.
+- **Naming the worktree after the branch instead of the task ID** — the `using-git-worktrees` sub-skill defaults to branch-based directory names; the worktree directory must be the task ID (e.g. `ITEM-11153`).
 - **Skipping the fetch** — a stale local `origin/main` means the worktree starts behind.
 - **Always updating the ticket** — only update when scoping added material new information; trivial rewording is noise for the ticket's watchers.
 - **Replacing the ticket body wholesale** — `update-notion` already handles preserving media/context; still, merge new info into the existing structure rather than overwriting it.
