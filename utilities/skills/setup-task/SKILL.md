@@ -14,9 +14,10 @@ A Notion task ID passed as the argument (e.g. `ITEM-11153`). If missing, ask for
 ## Workflow
 
 1. **Fetch the ticket from Notion**
-   - Search with `mcp__claude_ai_Notion__notion-search` using the task ID as the query.
-   - Pick the result whose title contains the task ID, then `mcp__claude_ai_Notion__notion-fetch` the page.
-   - No match → tell the user and stop. Multiple matches → show the candidates and ask which one.
+   - All `ITEM-<n>` tickets are rows in the **Engineering Tasks** database (data source `collection://f23dba4b-107c-4b12-ae4e-4274fd87a243`). The `ITEM-<n>` identifier is the row's `userDefined:ID` property — **not** the page title or body — so `notion-search` won't find it by ID.
+   - Query the **Table** view with `mcp__claude_ai_Notion__notion-query-database-view` and match the row whose `userDefined:ID` equals the requested ID. The output is large — process it rather than reading raw, and paginate with `next_cursor` if the ID isn't on the first page.
+   - Then `mcp__claude_ai_Notion__notion-fetch` the matched row's `url` for the full ticket.
+   - No match → tell the user and stop.
    - Keep the full ticket body — it is the input to scoping in step 4 and the comparison baseline in step 5.
 
 2. **Update main**
@@ -57,6 +58,7 @@ A Notion task ID passed as the argument (e.g. `ITEM-11153`). If missing, ask for
 
 ## Common Mistakes
 
+- **Searching by ID instead of querying the database** — `ITEM-<n>` is the `userDefined:ID` property, not title/body text; `notion-search` won't find it. Query the Engineering Tasks Table view and match `userDefined:ID`.
 - **Creating a nested worktree when already in one** — step 3's clean-worktree check exists precisely to avoid this; reuse the worktree and just switch to a fresh branch off `origin/main`.
 - **Reusing a dirty worktree silently** — uncommitted changes would bleed into the new branch; ask the user first.
 - **Checking out main locally before branching** — pollutes the current workspace; branch the worktree from `origin/main` instead.
