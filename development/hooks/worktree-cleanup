@@ -10,7 +10,7 @@
 #   - the working tree is clean
 #   - work looks concluded: HEAD is merged into the default branch, or the
 #     branch is pushed and up to date with its upstream
-#   - we haven't already prompted for this session + worktree + HEAD
+#   - we haven't already prompted for this session + worktree
 set -euo pipefail
 
 command -v jq >/dev/null 2>&1 || exit 0
@@ -61,9 +61,11 @@ if [ -z "$concluded" ]; then
 fi
 [ -n "$concluded" ] || exit 0
 
-# Prompt once per session + worktree + HEAD (new commits re-arm the prompt)
+# Prompt once per session + worktree. Deliberately NOT keyed on HEAD: during
+# subagent-driven work each task commits/pushes, so a per-HEAD marker re-armed
+# the prompt after every subagent completion (incorrectly, mid-work).
 marker_key=$(printf '%s' "$top" | cksum | awk '{print $1}')
-marker="${TMPDIR:-/tmp}/claude-worktree-prompt-${session_id}-${marker_key}-${head:0:12}"
+marker="${TMPDIR:-/tmp}/claude-worktree-prompt-${session_id}-${marker_key}"
 [ -f "$marker" ] && exit 0
 touch "$marker" 2>/dev/null || true
 
