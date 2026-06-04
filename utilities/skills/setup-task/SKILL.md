@@ -39,13 +39,16 @@ A Notion task ID passed as the argument (e.g. `ITEM-11153`). If missing, ask for
 3. **Scope the requirements** — **REQUIRED SUB-SKILL:** use `development:scope-requirements`, working inside the new worktree.
    - Feed it the ticket title and body as the feature request.
 
-4. **Sync findings back to Notion**
-   - Compare the scoped output against the original ticket body from step 1.
-   - Update only if scoping added substance the ticket lacks — new requirements, decisions, edge cases, or out-of-scope items. Rewording or restructuring existing content does not count.
-   - If it does, update the ticket — **REQUIRED SUB-SKILL:** use `utilities:update-notion` with the merged content.
-   - If the ticket already covered everything, skip the update and say so.
+4. **Sync findings back to Notion — in the background**
+   - Compare the scoped output against the original ticket body from step 1. Do this inline — both are already in context.
+   - Update only if scoping added substance the ticket lacks — new requirements, decisions, edge cases, or out-of-scope items. Rewording or restructuring existing content does not count. If the ticket already covered everything, skip the update and say so.
+   - If an update is warranted, dispatch a **background agent** (Agent tool, `run_in_background: true`) to perform it — do NOT block on it; proceed straight to step 5. The agent's prompt MUST include everything it needs, since it cannot see this conversation:
+     - the ticket's Notion page URL (from step 1 — saves it re-searching)
+     - the full merged body content to write
+     - instruction to follow `utilities:update-notion`, skipping its search step (URL provided) and its ask-the-user step (content provided), but still applying its media/context preservation rules before writing.
+   - When the background agent's completion notification arrives, relay one line on whether the update succeeded.
 
-5. **Report and hand off** — print the worktree path, branch name, and a one-line note on whether the ticket was updated. Then invoke `development:writing-plans` with the scoped requirements from step 3 as the spec — setup is done; planning is the next phase and runs inside the worktree.
+5. **Report and hand off** — print the worktree path, branch name, and a one-line note on the Notion sync (updating in background / skipped). Then invoke `development:writing-plans` with the scoped requirements from step 3 as the spec — setup is done; planning is the next phase and runs inside the worktree.
 
 ## Common Mistakes
 
@@ -55,4 +58,6 @@ A Notion task ID passed as the argument (e.g. `ITEM-11153`). If missing, ask for
 - **Checking out main locally before branching** — pollutes the current workspace; the script branches from `origin/main` directly, never check out main yourself.
 - **Always updating the ticket** — only update when scoping added material new information; trivial rewording is noise for the ticket's watchers.
 - **Replacing the ticket body wholesale** — `update-notion` already handles preserving media/context; still, merge new info into the existing structure rather than overwriting it.
+- **Blocking on the Notion update** — the sync is a side effect; dispatch it in the background and move on to planning. Waiting for MCP round-trips before starting `writing-plans` wastes the user's time.
+- **Dispatching the background agent without the page URL or merged content** — it cannot see the conversation; an underspecified prompt forces it to redo the database query or, worse, guess at content.
 - **Stopping after the ticket sync** — always end by handing off to `development:writing-plans`; the Notion update is a side effect, not the goal.
