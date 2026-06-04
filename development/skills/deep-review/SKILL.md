@@ -57,6 +57,8 @@ Spawn only the subagents whose condition is met. Write the skipped-subagents not
 
 If a subagent cannot determine an attribute with evidence, it must say so and mark the finding `unverified`.
 
+**External-artifact existence claims MUST be fact-checked online before being reported.** Any claim that a version, package, GitHub Action, API, library function, or config option "does not exist", "is not released", "is not a real version", or "is not available" is unreliable from model knowledge alone — training cutoffs make newer releases invisible. Before reporting such a finding, the subagent MUST verify it against the authoritative source via WebSearch/WebFetch (e.g. the action's GitHub releases/tags page, the npm/PyPI/crates registry, official docs/changelog). Include the checked URL as evidence. If online verification is unavailable, the claim MUST be marked `unverified` — never assert non-existence from memory.
+
 ### context (code-explorer)
 **subagent_type:** `code-explorer`
 **Task:**
@@ -123,6 +125,7 @@ If a subagent cannot determine an attribute with evidence, it must say so and ma
 - Find edge cases not handled (off-by-one, null/empty inputs, concurrency, overflow, race conditions). For each, state whether the trigger is `common-path` or `narrow`.
 - Identify outright bugs: wrong operator, incorrect conditional, missing await, etc. Distinguish a real `bug` from a `suggestion` (style/preference/optional refactor).
 - For every finding, determine Origin (`introduced` vs `pre-existing`) against `BASE_COMMIT..HEAD` — do not propose `[high]`/`[critical]` for `pre-existing` code, narrow edge cases, suggestions, or dead/unreachable code (per the Severity Rubric).
+- If you believe a referenced external artifact (GitHub Action version, package version, API, function) does not exist, you MUST verify online (WebSearch/WebFetch against the releases page or registry) before reporting it, citing the URL — your training data is stale relative to recent releases. No online check → mark `unverified`, never assert non-existence.
 **Output:** grouped list of logic issues and convention violations with file:line, confidence score, the Origin/Reach/Kind attributes, proposed severity, and suggested fix
 
 ---
@@ -169,6 +172,7 @@ A finding qualifies for `[high]` or `[critical]` **only if it is `introduced` AN
 3. **Suggestion → `[low]`.** Anything with `kind: suggestion` (style, naming, preference, optional refactor, "consider…") is capped at `[low]`, regardless of how confidently it is argued.
 4. **Unused/dead code → `[low]`.** Any finding (bug, logic error, missing test, etc.) in code identified as dead, unreachable, or unused is capped at `[low]`. Never mark errors in unused code `[high]`/`[critical]`.
 5. **Unverified → `[medium]`.** A finding lacking concrete evidence from the diff/commits/tests, or missing an Origin/Reach/Kind attribute, is capped at `[medium]` and labeled `(unverified)`. Do not promote a guess to `[high]`.
+6. **Unverified non-existence claim → verify or cap at `[low]`.** A finding asserting an external artifact (action/package/API version) "does not exist" without a cited verification URL is a likely training-cutoff hallucination. Verify it yourself with WebSearch/WebFetch during synthesis: if the artifact exists, drop the finding; if you cannot verify, cap at `[low]` and label `(unverified — possible stale model knowledge)`.
 
 When you downgrade a finding via a cap, keep it in the report at its capped severity with the label — do not silently drop it.
 
