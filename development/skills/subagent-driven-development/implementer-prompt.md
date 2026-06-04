@@ -3,7 +3,7 @@
 Use this template when dispatching an implementer subagent.
 
 ```
-Task tool (focused-builder):
+Task tool (development:focused-builder):
   description: "Implement Task N: [task name]"
   prompt: |
     You are implementing Task N: [task name]

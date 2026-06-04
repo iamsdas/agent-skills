@@ -73,7 +73,7 @@ The missing test is one instance of preventing recurrence. If the diagnosis poin
    - If branch is not `main`, ask the user whether the issue is tied to this branch's changes — and include context in the question: name the branch and give a one-line summary of what it changes, so the user can actually answer.
    - If user confirms yes, explicitly track this as `Branch context` and prioritize code paths changed on that branch during diagnosis.
    - If user says no, proceed as usual without branch-scoped assumptions.
-   - For branch context, summarize the branch changes using a `code-explorer` subagent asked to respond as a caveman (terse summary).
+   - For branch context, summarize the branch changes using a `development:code-explorer` subagent asked to respond as a caveman (terse summary).
 
 2. Parse available signal (logs OR user report):
    - If logs/errors exist: extract error class/type, message, stack frames, and correlated context (request IDs, endpoint, job, tenant, user action).
@@ -85,13 +85,13 @@ The missing test is one instance of preventing recurrence. If the diagnosis poin
    - Identify common trigger scenarios.
    - Distinguish hard failures vs partial degradation.
 
-4. Dispatch two `code-explorer` subagents **in parallel** (single message):
+4. Dispatch two `development:code-explorer` subagents **in parallel** (single message):
    - **Root-cause explorer:** Find the exact symbol/function and smallest branch/condition causing the behavior. Cite only the minimal root-cause snippet. Do not cite logging lines, exception construction/raising lines, or wrapper handlers unless they are the direct root cause.
    - **Git history explorer:** Search recent commits for changes to the files/symbols identified from the signal. Look for commits that introduced the bug, modified the affected logic, or touched related code paths. Include commit hash, author, date, and one-line summary. Note if the issue was introduced recently vs. long-standing.
 
    Incorporate both results: root-cause snippet into **Root cause**, commit findings into **Relevant commits**.
 
-5. Consolidate test coverage with a `tests-analyzer` subagent (dispatch after step 4 returns affected files):
+5. Consolidate test coverage with a `development:tests-analyzer` subagent (dispatch after step 4 returns affected files):
    - Launch once likely affected files/symbols are identified. Pass the affected file paths and the diagnosed root cause as context.
    - Ask it to return:
      - Existing tests covering this behavior, grouped by test type.

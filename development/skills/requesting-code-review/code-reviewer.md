@@ -1,9 +1,9 @@
 # Code Reviewer Context Template
 
-Use this template when dispatching a `code-reviewer` subagent. The agent already knows how to review — just pass the context.
+Use this template when dispatching a `development:code-reviewer` subagent. The agent already knows how to review — just pass the context.
 
 ```
-Task tool (code-reviewer):
+Task tool (development:code-reviewer):
   description: "Review code changes"
   prompt: |
     ## What Was Implemented

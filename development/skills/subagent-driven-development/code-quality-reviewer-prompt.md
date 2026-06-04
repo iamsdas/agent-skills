@@ -7,7 +7,7 @@ Use this template when dispatching a code quality reviewer subagent.
 **Only dispatch after spec compliance review passes.**
 
 ```
-Task tool (code-reviewer):
+Task tool (development:code-reviewer):
   description: "Review code quality for Task N"
   prompt: |
     ## What Was Implemented

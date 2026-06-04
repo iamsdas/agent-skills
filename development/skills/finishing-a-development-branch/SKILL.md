@@ -81,19 +81,19 @@ Evaluate the already-collected `CHANGED_FILES` and `DIFF_CONTENT` against these 
 
 | Subagent | Spawn if | Skip if |
 |---|---|---|
-| `tests-analyzer` | Any source code file changed (e.g., `.ts`, `.js`, `.py`, `.go`, `.rs`, `.rb`, `.java`, `.cpp`, or similar language files) | ALL changed files are config/docs/assets (e.g., only `.json`, `.yaml`, `.toml`, `.md`, `.txt`, image files) |
-| `silent-failure-hunter` | DIFF_CONTENT contains error-handling patterns: `try`, `catch`, `except`, `rescue`, `.catch(`, `handleError`, `onError`, `Result<`, `Err(` | None of those patterns appear in the diff |
-| `comment-analyzer` | DIFF_CONTENT has added or removed comment lines (diff lines starting with `+//`, `-//`, `+#`, `-#`, `+/*`, `-/*`, `+ *`, `- *`, `+"""`, `-"""`, `+'''`, `-'''`) | No comment lines in the diff |
+| `development:tests-analyzer` | Any source code file changed (e.g., `.ts`, `.js`, `.py`, `.go`, `.rs`, `.rb`, `.java`, `.cpp`, or similar language files) | ALL changed files are config/docs/assets (e.g., only `.json`, `.yaml`, `.toml`, `.md`, `.txt`, image files) |
+| `development:silent-failure-hunter` | DIFF_CONTENT contains error-handling patterns: `try`, `catch`, `except`, `rescue`, `.catch(`, `handleError`, `onError`, `Result<`, `Err(` | None of those patterns appear in the diff |
+| `development:comment-analyzer` | DIFF_CONTENT has added or removed comment lines (diff lines starting with `+//`, `-//`, `+#`, `-#`, `+/*`, `-/*`, `+ *`, `- *`, `+"""`, `-"""`, `+'''`, `-'''`) | No comment lines in the diff |
 
 **If no subagents pass triage** (e.g., a pure-docs commit), proceed directly to Step 5 with no output.
 
 **Dispatch applicable subagents in parallel** (single message, all background). Only spawn subagents that passed triage above — omit the rest entirely:
 
-- **`tests-analyzer`** — pass CHANGED_FILES + DIFF_CONTENT. Prompt: *"Review this diff for CRITICAL test coverage gaps only — logic branches with no test at all, untested error paths, new public functions with zero coverage. Ignore nice-to-haves and style. If no critical gaps exist, say 'No critical gaps found' and stop. Return at most 3 findings: file:line, what is untested, what failure it would miss, and a criticality rating 7-10."*
+- **`development:tests-analyzer`** — pass CHANGED_FILES + DIFF_CONTENT. Prompt: *"Review this diff for CRITICAL test coverage gaps only — logic branches with no test at all, untested error paths, new public functions with zero coverage. Ignore nice-to-haves and style. If no critical gaps exist, say 'No critical gaps found' and stop. Return at most 3 findings: file:line, what is untested, what failure it would miss, and a criticality rating 7-10."*
 
-- **`silent-failure-hunter`** — pass DIFF_CONTENT. Prompt: *"Review this diff for CRITICAL and HIGH severity silent failures only — skip MEDIUM. If none exist, say 'No critical error handling issues found' and stop. Return at most 3 findings: file:line, severity, one sentence on the issue, one sentence on debugging impact."*
+- **`development:silent-failure-hunter`** — pass DIFF_CONTENT. Prompt: *"Review this diff for CRITICAL and HIGH severity silent failures only — skip MEDIUM. If none exist, say 'No critical error handling issues found' and stop. Return at most 3 findings: file:line, severity, one sentence on the issue, one sentence on debugging impact."*
 
-- **`comment-analyzer`** — pass CHANGED_FILES (read their content). Prompt: *"Review the changed files for CRITICAL comment issues only — comments that are factually wrong or actively misleading about what the code does. Ignore missing comments, style, wording preferences, and minor inaccuracies. If no critical issues exist, say 'No critical comment issues found' and stop. Return at most 3 findings: file:line, what the comment says vs what the code actually does."*
+- **`development:comment-analyzer`** — pass CHANGED_FILES (read their content). Prompt: *"Review the changed files for CRITICAL comment issues only — comments that are factually wrong or actively misleading about what the code does. Ignore missing comments, style, wording preferences, and minor inaccuracies. If no critical issues exist, say 'No critical comment issues found' and stop. Return at most 3 findings: file:line, what the comment says vs what the code actually does."*
 
 **Parallel-change check (inline — no subagent):** For each non-trivial logic change in `DIFF_CONTENT`, grep the codebase for sibling implementations of the same operation — other call sites, duplicated handlers, the same logic done for a different entity, platform, or sync/async variant. If a sibling exists in code the diff did NOT touch, surface it as `[parallel] file:line — same logic as <changed file:line>, not updated`. This catches changes applied to one path but missed in its twin. If no parallel paths exist, print nothing for this check.
 

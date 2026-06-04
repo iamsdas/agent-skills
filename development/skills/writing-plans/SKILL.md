@@ -49,9 +49,9 @@ Use `AskUserQuestion`. Default the recommendation to Fast unless the scope read 
 
 Scale the agent count to the route — do not fan out wider than the task needs.
 
-**Fast path:** Launch **one** code-explorer (or read the relevant files yourself if it's a handful) targeting the change site and its immediate patterns. It MUST still enumerate every parallel/duplicate implementation and call site of the code being changed (sibling handlers, the same operation for another entity/platform, copy-pasted branches) — that completeness check is non-negotiable on either route. Then go straight to Phase 4 (Phase 3 is skipped on the fast path).
+**Fast path:** Launch **one** development:code-explorer (or read the relevant files yourself if it's a handful) targeting the change site and its immediate patterns. It MUST still enumerate every parallel/duplicate implementation and call site of the code being changed (sibling handlers, the same operation for another entity/platform, copy-pasted branches) — that completeness check is non-negotiable on either route. Then go straight to Phase 4 (Phase 3 is skipped on the fast path).
 
-**Thorough path:** Launch **2-3** code-explorer agents in parallel, each targeting a different aspect (e.g. similar features, high-level architecture, control flow), each reading 5-10 key files and tracing abstractions end-to-end. One explorer MUST do the parallel-implementation/call-site enumeration above.
+**Thorough path:** Launch **2-3** development:code-explorer agents in parallel, each targeting a different aspect (e.g. similar features, high-level architecture, control flow), each reading 5-10 key files and tracing abstractions end-to-end. One explorer MUST do the parallel-implementation/call-site enumeration above.
 
 **Output:** Summary of existing patterns and architecture relevant to this task, including every parallel implementation or sibling call site that must change in lockstep (file:line each).
 
@@ -61,7 +61,7 @@ Scale the agent count to the route — do not fan out wider than the task needs.
 
 **Skip this phase entirely on the fast path** — go to Phase 4.
 
-**Thorough path:** Launch 2-3 code-architect agents in parallel with different focuses — minimal changes (smallest change, maximum reuse), clean architecture (maintainability, elegant abstractions), or pragmatic balance (speed + quality). Pass each architect the exploration summary from Phase 2 (patterns, parallel implementations, call sites) — they design the high-level approach on those findings rather than re-tracing the codebase. **Only if** the change plausibly makes existing code dead or consolidatable, add one `code-simplifier` agent to the same batch (analysis only — it must not edit) to flag dead branches, duplication to consolidate, and abstractions to collapse; skip it when the change is purely additive. Review all approaches and form a recommendation.
+**Thorough path:** Launch 2-3 development:code-architect agents in parallel with different focuses — minimal changes (smallest change, maximum reuse), clean architecture (maintainability, elegant abstractions), or pragmatic balance (speed + quality). Pass each architect the exploration summary from Phase 2 (patterns, parallel implementations, call sites) — they design the high-level approach on those findings rather than re-tracing the codebase. **Only if** the change plausibly makes existing code dead or consolidatable, add one `development:code-simplifier` agent to the same batch (analysis only — it must not edit) to flag dead branches, duplication to consolidate, and abstractions to collapse; skip it when the change is purely additive. Review all approaches and form a recommendation.
 
 **Output:** Brief summary of each approach, trade-offs comparison, recommendation with reasoning, and any simplification opportunities worth folding into the plan. Present to user and wait for confirmation before continuing.
 

@@ -59,8 +59,8 @@ If a subagent cannot determine an attribute with evidence, it must say so and ma
 
 **External-artifact existence claims MUST be fact-checked online before being reported.** Any claim that a version, package, GitHub Action, API, library function, or config option "does not exist", "is not released", "is not a real version", or "is not available" is unreliable from model knowledge alone — training cutoffs make newer releases invisible. Before reporting such a finding, the subagent MUST verify it against the authoritative source via WebSearch/WebFetch (e.g. the action's GitHub releases/tags page, the npm/PyPI/crates registry, official docs/changelog). Include the checked URL as evidence. If online verification is unavailable, the claim MUST be marked `unverified` — never assert non-existence from memory.
 
-### context (code-explorer)
-**subagent_type:** `code-explorer`
+### context (development:code-explorer)
+**subagent_type:** `development:code-explorer`
 **Task:**
 - Analyze this branch to understand the scope and purpose of changes
 - Summarize what the branch is trying to accomplish in 1-3 sentences
@@ -80,8 +80,8 @@ If a subagent cannot determine an attribute with evidence, it must say so and ma
 
 ---
 
-### breaking (code-architect)
-**subagent_type:** `code-architect`
+### breaking (development:code-architect)
+**subagent_type:** `development:code-architect`
 **Task:**
 - Analyze this diff for backwards-compatibility issues
 - Identify changes to public APIs, exported interfaces, function signatures, and schema definitions that are not backwards-compatible
@@ -101,14 +101,14 @@ If a subagent cannot determine an attribute with evidence, it must say so and ma
 
 ---
 
-### tests (tests-analyzer)
-**subagent_type:** `tests-analyzer`
+### tests (development:tests-analyzer)
+**subagent_type:** `development:tests-analyzer`
 **Task:** Focus on changed components and code paths in this diff. Note if existing tests were deleted without replacement.
 
 ---
 
-### redundancy (code-simplifier)
-**subagent_type:** `code-simplifier`
+### redundancy (development:code-simplifier)
+**subagent_type:** `development:code-simplifier`
 **Task:** Analysis only — do not apply any changes.
 - Find code that duplicates existing functionality elsewhere in the diff or codebase
 - Identify dead code, unreachable branches, and unused variables introduced by this diff
@@ -118,8 +118,8 @@ If a subagent cannot determine an attribute with evidence, it must say so and ma
 
 ---
 
-### logic-and-conventions (code-reviewer)
-**subagent_type:** `code-reviewer`
+### logic-and-conventions (development:code-reviewer)
+**subagent_type:** `development:code-reviewer`
 **Task:**
 - Specialist agents are running alongside you in this review (tests, silent-failures, comments, types). Defer those lanes to them — focus only on the items below.
 - Find edge cases not handled (off-by-one, null/empty inputs, concurrency, overflow, race conditions). For each, state whether the trigger is `common-path` or `narrow`.
@@ -130,8 +130,8 @@ If a subagent cannot determine an attribute with evidence, it must say so and ma
 
 ---
 
-### comments-params (comment-analyzer)
-**subagent_type:** `comment-analyzer`
+### comments-params (development:comment-analyzer)
+**subagent_type:** `development:comment-analyzer`
 **Task:**
 - Flag removed comments that captured information not obvious from the code alone (hidden constraints, workarounds, subtle invariants)
 - Flag new parameters, config values, or flags that lack documentation when the information is non-obvious
@@ -140,14 +140,14 @@ If a subagent cannot determine an attribute with evidence, it must say so and ma
 
 ---
 
-### silent-failures (silent-failure-hunter)
-**subagent_type:** `silent-failure-hunter`
+### silent-failures (development:silent-failure-hunter)
+**subagent_type:** `development:silent-failure-hunter`
 **Task:** Focus only on error-handling code added or changed in this diff.
 
 ---
 
-### types (type-design-analyzer)
-**subagent_type:** `type-design-analyzer`
+### types (development:type-design-analyzer)
+**subagent_type:** `development:type-design-analyzer`
 **Task:** Analyze only types introduced or modified in this diff.
 
 ---

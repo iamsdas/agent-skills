@@ -16,7 +16,7 @@ Use this skill to prevent premature implementation planning. First align on prod
    - Highlight, at a high level, what you already know versus what is still unknown.
 
 2. Explore the current state with subagents:
-   - Dispatch `code-explorer` subagents to trace relevant code paths and establish current/baseline behavior.
+   - Dispatch `development:code-explorer` subagents to trace relevant code paths and establish current/baseline behavior.
    - Use exploration to surface — not to ask — the following, so the questions in step 3 are informed rather than guesses:
      - Current behavior and the gap between current and desired behavior.
      - Related or dependent logic that may also need to change as a consequence of this request.
