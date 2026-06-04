@@ -12,18 +12,6 @@
         ]
       }
     ],
-    "Stop": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/run-hook.cmd\" worktree-cleanup",
-            "async": false
-          }
-        ]
-      }
-    ],
     "SessionStart": [
       {
         "matcher": "startup|clear|compact",
