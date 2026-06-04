@@ -18,52 +18,41 @@ A Notion task ID passed as the argument (e.g. `ITEM-11153`). If missing, ask for
    - Query the **Table** view with `mcp__claude_ai_Notion__notion-query-database-view` and match the row whose `userDefined:ID` equals the requested ID. The output is large — process it rather than reading raw, and paginate with `next_cursor` if the ID isn't on the first page.
    - Then `mcp__claude_ai_Notion__notion-fetch` the matched row's `url` for the full ticket.
    - No match → tell the user and stop.
-   - Keep the full ticket body — it is the input to scoping in step 4 and the comparison baseline in step 5.
+   - Keep the full ticket body — it is the input to scoping in step 3 and the comparison baseline in step 4.
 
-2. **Update main**
-   - `git fetch origin main` from the repo root.
-   - Do NOT check out main in the current workspace — the worktree in step 3 is created from `origin/main` directly.
-
-3. **Set up the workspace**
-   - **First check whether you are already in a clean worktree** — reuse it instead of creating another:
-     ```bash
-     GIT_DIR=$(cd "$(git rev-parse --git-dir)" && pwd -P)
-     GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" && pwd -P)
-     # In a linked worktree? (submodules also have GIT_DIR != GIT_COMMON — exclude them)
-     if [ "$GIT_DIR" != "$GIT_COMMON" ] && [ -z "$(git rev-parse --show-superproject-working-tree)" ]; then
-       IN_WORKTREE=yes
-     fi
-     # Clean? (no uncommitted changes)
-     [ -z "$(git status --porcelain)" ] && CLEAN=yes
-     ```
-   - **If in a worktree and clean:** do NOT create a new one. Just create the branch in place: `git switch -c <branch_name> origin/main`. Skip the worktree directory naming below.
-   - **If in a worktree but dirty:** ask the user whether to reuse it anyway or create a fresh one. If reuse: stash or commit the changes per the user's preference, then `git switch -c <branch_name> origin/main`.
-   - **Otherwise, create a worktree** — **REQUIRED SUB-SKILL:** use `development:using-git-worktrees`. The worktree directory MUST be named after the task ID (e.g. `.worktrees/ITEM-11153`) — override any default naming the sub-skill would otherwise apply (such as naming it after the branch).
-   - Branch name format: `<user_name>/<task_summary_snake_case>`
+2. **Set up the workspace** — one script call, no sub-skill needed.
+   - Compose the branch name: `<user_name>/<task_summary_snake_case>`
      - `<user_name>`: local part of `git config user.email` (e.g. `surya@fused.io` → `surya`); fall back to `whoami`.
      - `<task_summary_snake_case>`: a 3-word snake_case summary that captures the essence of the ticket — pick the most meaningful words from the title, not necessarily in order (e.g. "Fix login redirect loop on Safari" → `fix_safari_redirect`, "Add rate limiting to the export API" → `rate_limit_export`).
-   - Worktree directory name: the task ID as-is (e.g. `ITEM-11153`).
-   - Base the branch on `origin/main`, not the current branch.
+   - Run (from anywhere inside the repo, using this skill's base directory announced when it loaded):
+     ```bash
+     bash <skill_base_dir>/scripts/setup-workspace.sh <TASK_ID> <branch_name>
+     ```
+     The script handles everything deterministically: fetches `origin/main`, reuses a clean linked worktree in place if you're already in one, otherwise creates `.worktrees/<TASK_ID>` (gitignored) on the new branch off `origin/main`. Read the `STATUS=`/`WORKTREE=` lines it prints.
+   - **Exit codes that need your judgment:**
+     - `2` (`dirty-worktree`): ask the user whether to reuse anyway (stash or commit per their preference, then `git switch -c <branch_name> origin/main`) or create a fresh worktree.
+     - `3` (`path-exists`): a worktree for this task already exists — `cd` into it and check its state; it's probably a previous run of this task.
+     - `4` (`branch-exists`): ask whether to reuse the existing branch or pick a new name.
+   - Only fall back to `development:using-git-worktrees` if the script itself fails (e.g. sandbox denies `git worktree add`).
+   - This step needs only the ticket title for branch naming — it can start as soon as the matching row is found in step 1, before the full ticket fetch completes.
 
-4. **Scope the requirements** — **REQUIRED SUB-SKILL:** use `development:scope-requirements`, working inside the new worktree.
+3. **Scope the requirements** — **REQUIRED SUB-SKILL:** use `development:scope-requirements`, working inside the new worktree.
    - Feed it the ticket title and body as the feature request.
 
-5. **Sync findings back to Notion**
+4. **Sync findings back to Notion**
    - Compare the scoped output against the original ticket body from step 1.
    - Update only if scoping added substance the ticket lacks — new requirements, decisions, edge cases, or out-of-scope items. Rewording or restructuring existing content does not count.
    - If it does, update the ticket — **REQUIRED SUB-SKILL:** use `utilities:update-notion` with the merged content.
    - If the ticket already covered everything, skip the update and say so.
 
-6. **Report and hand off** — print the worktree path, branch name, and a one-line note on whether the ticket was updated. Then invoke `development:writing-plans` with the scoped requirements from step 4 as the spec — setup is done; planning is the next phase and runs inside the worktree.
+5. **Report and hand off** — print the worktree path, branch name, and a one-line note on whether the ticket was updated. Then invoke `development:writing-plans` with the scoped requirements from step 3 as the spec — setup is done; planning is the next phase and runs inside the worktree.
 
 ## Common Mistakes
 
 - **Searching by ID instead of querying the database** — `ITEM-<n>` is the `userDefined:ID` property, not title/body text; `notion-search` won't find it. Query the Engineering Tasks Table view and match `userDefined:ID`.
-- **Creating a nested worktree when already in one** — step 3's clean-worktree check exists precisely to avoid this; reuse the worktree and just switch to a fresh branch off `origin/main`.
-- **Reusing a dirty worktree silently** — uncommitted changes would bleed into the new branch; ask the user first.
-- **Checking out main locally before branching** — pollutes the current workspace; branch the worktree from `origin/main` instead.
-- **Naming the worktree after the branch instead of the task ID** — the `using-git-worktrees` sub-skill defaults to branch-based directory names; the worktree directory must be the task ID (e.g. `ITEM-11153`).
-- **Skipping the fetch** — a stale local `origin/main` means the worktree starts behind.
+- **Reimplementing the workspace setup step by step in bash** — `scripts/setup-workspace.sh` already handles fetch, worktree detection/reuse, gitignore safety, and branch creation; run it once and read its output instead of reasoning through git plumbing.
+- **Reusing a dirty worktree silently** — the script exits `2` for exactly this reason; ask the user before stashing/committing.
+- **Checking out main locally before branching** — pollutes the current workspace; the script branches from `origin/main` directly, never check out main yourself.
 - **Always updating the ticket** — only update when scoping added material new information; trivial rewording is noise for the ticket's watchers.
 - **Replacing the ticket body wholesale** — `update-notion` already handles preserving media/context; still, merge new info into the existing structure rather than overwriting it.
 - **Stopping after the ticket sync** — always end by handing off to `development:writing-plans`; the Notion update is a side effect, not the goal.
