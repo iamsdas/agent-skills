@@ -68,37 +68,24 @@ The missing test is one instance of preventing recurrence. If the diagnosis poin
 
 ## Investigation Workflow
 
-1. Check branch context first:
-   - Determine the current git branch.
-   - If branch is not `main`, ask the user whether the issue is tied to this branch's changes — and include context in the question: name the branch and give a one-line summary of what it changes, so the user can actually answer.
-   - If user confirms yes, explicitly track this as `Branch context` and prioritize code paths changed on that branch during diagnosis.
-   - If user says no, proceed as usual without branch-scoped assumptions.
-   - For branch context, summarize the branch changes using a `development:code-explorer` subagent asked to respond as a caveman (terse summary).
-
-2. Parse available signal (logs OR user report):
+1. Parse available signal (logs OR user report):
    - If logs/errors exist: extract error class/type, message, stack frames, and correlated context (request IDs, endpoint, job, tenant, user action).
    - If only a bug report exists: extract user action, expected behavior, actual behavior, reproducibility hints, and impacted surface.
    - Normalize both into a "symptom -> trigger -> likely failing path" chain.
 
-3. Build user-impact narrative:
+2. Build user-impact narrative:
    - Translate technical failure to user-visible behavior.
    - Identify common trigger scenarios.
    - Distinguish hard failures vs partial degradation.
 
-4. Dispatch two `development:code-explorer` subagents **in parallel** (single message):
-   - **Root-cause explorer:** Find the exact symbol/function and smallest branch/condition causing the behavior. Cite only the minimal root-cause snippet. Do not cite logging lines, exception construction/raising lines, or wrapper handlers unless they are the direct root cause.
-   - **Git history explorer:** Search recent commits for changes to the files/symbols identified from the signal. Look for commits that introduced the bug, modified the affected logic, or touched related code paths. Include commit hash, author, date, and one-line summary. Note if the issue was introduced recently vs. long-standing.
+3. Dispatch three subagents **in parallel** (single message):
+   - **Root-cause explorer** (`development:code-explorer`): Find the exact symbol/function and smallest branch/condition causing the behavior. Cite only the minimal root-cause snippet. Do not cite logging lines, exception construction/raising lines, or wrapper handlers unless they are the direct root cause.
+   - **Git history explorer** (`development:code-explorer`): Search recent commits for changes to the files/symbols identified from the signal. Look for commits that introduced the bug, modified the affected logic, or touched related code paths. Include commit hash, author, date, and one-line summary. Note if the issue was introduced recently vs. long-standing. If the current branch is not `main`, also summarize what this branch changes relative to `main` and whether those changes plausibly relate to the issue — this feeds the **Branch context** section.
+   - **Test coverage analyzer** (`development:tests-analyzer`): Pass the parsed signal and the suspected files/symbols from step 1. Ask it to return existing tests covering this behavior (grouped by test type) and the most appropriate "should-have-existed" test that would have caught this issue earlier.
 
-   Incorporate both results: root-cause snippet into **Root cause**, commit findings into **Relevant commits**.
+   Incorporate results: root-cause snippet into **Root cause**, commit findings into **Relevant commits** and **Branch context**, coverage findings into **Test coverage**.
 
-5. Consolidate test coverage with a `development:tests-analyzer` subagent (dispatch after step 4 returns affected files):
-   - Launch once likely affected files/symbols are identified. Pass the affected file paths and the diagnosed root cause as context.
-   - Ask it to return:
-     - Existing tests covering this behavior, grouped by test type.
-     - The most appropriate "should-have-existed" test that would have caught this issue earlier.
-   - Incorporate this output into the final `Testing coverage for this issue` section.
-
-6. Return diagnosis:
+4. Return diagnosis:
    - Do not implement fixes.
    - If needed, suggest 1-2 next validation checks briefly.
 
