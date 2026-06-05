@@ -42,9 +42,10 @@ A Notion task ID passed as the argument (e.g. `ITEM-11153`). If missing, ask for
 4. **Sync findings back to Notion — in the background**
    - Compare the scoped output against the original ticket body from step 1. Do this inline — both are already in context.
    - Update only if scoping added substance the ticket lacks — new requirements, decisions, edge cases, or out-of-scope items. Rewording or restructuring existing content does not count. If the ticket already covered everything, skip the update and say so.
-   - If an update is warranted, dispatch a **background agent** (Agent tool, `run_in_background: true`) to perform it — do NOT block on it; proceed straight to step 5. The agent's prompt MUST include everything it needs, since it cannot see this conversation:
+   - If an update is warranted, the new ticket body MUST be the standard scope document format from `development:scope-requirements` (`# Title`, `## Context`, `## What's Changing`, `## Affected Flows`, `## Constraints`, `## Out of Scope`). Fold the original ticket's information into those sections — do NOT keep the old body and append the findings as a separate section.
+   - Dispatch a **background agent** (Agent tool, `run_in_background: true`) to perform the update — do NOT block on it; proceed straight to step 5. The agent's prompt MUST include everything it needs, since it cannot see this conversation:
      - the ticket's Notion page URL (from step 1 — saves it re-searching)
-     - the full merged body content to write
+     - the full merged body content to write (already in the standard format — compose it inline before dispatching)
      - instruction to follow `utilities:update-notion`, skipping its search step (URL provided) and its ask-the-user step (content provided), but still applying its media/context preservation rules before writing.
    - When the background agent's completion notification arrives, relay one line on whether the update succeeded.
 
@@ -57,7 +58,7 @@ A Notion task ID passed as the argument (e.g. `ITEM-11153`). If missing, ask for
 - **Reusing a dirty worktree silently** — the script exits `2` for exactly this reason; ask the user before stashing/committing.
 - **Checking out main locally before branching** — pollutes the current workspace; the script branches from `origin/main` directly, never check out main yourself.
 - **Always updating the ticket** — only update when scoping added material new information; trivial rewording is noise for the ticket's watchers.
-- **Replacing the ticket body wholesale** — `update-notion` already handles preserving media/context; still, merge new info into the existing structure rather than overwriting it.
+- **Appending findings as a separate section** — the updated body must be one coherent scope document in the standard format; restructure the whole ticket, folding original content into the standard sections. (`update-notion` still preserves media/attachments at the bottom.)
 - **Blocking on the Notion update** — the sync is a side effect; dispatch it in the background and move on to the final report. Waiting for MCP round-trips before reporting wastes the user's time.
 - **Dispatching the background agent without the page URL or merged content** — it cannot see the conversation; an underspecified prompt forces it to redo the database query or, worse, guess at content.
 - **Continuing into planning or implementation** — setup ends with the scoped requirements; do not invoke `development:writing-plans` or write code unless the user asks.
