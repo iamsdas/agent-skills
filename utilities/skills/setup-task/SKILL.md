@@ -5,7 +5,7 @@ description: Use when the user provides a Notion task ID (e.g. ITEM-11153) and w
 
 # Setup Task
 
-Bootstrap work on a Notion ticket: fetch the ticket, create an isolated worktree on a fresh branch off latest main, scope the requirements, and sync any new findings back to the ticket — then hand off to implementation planning.
+Bootstrap work on a Notion ticket: fetch the ticket, create an isolated worktree on a fresh branch off latest main, scope the requirements, and sync any new findings back to the ticket — then end with the scoped requirements.
 
 ## Input
 
@@ -48,7 +48,7 @@ A Notion task ID passed as the argument (e.g. `ITEM-11153`). If missing, ask for
      - instruction to follow `utilities:update-notion`, skipping its search step (URL provided) and its ask-the-user step (content provided), but still applying its media/context preservation rules before writing.
    - When the background agent's completion notification arrives, relay one line on whether the update succeeded.
 
-5. **Report and hand off** — print the worktree path, branch name, and a one-line note on the Notion sync (updating in background / skipped). Then invoke `development:writing-plans` with the scoped requirements from step 3 as the spec — setup is done; planning is the next phase and runs inside the worktree.
+5. **Report and end** — print the worktree path, branch name, a one-line note on the Notion sync (updating in background / skipped), and the full scoped-requirements output from step 3. Then STOP — do NOT invoke `development:writing-plans` or start implementation; the user decides the next phase.
 
 ## Common Mistakes
 
@@ -58,6 +58,6 @@ A Notion task ID passed as the argument (e.g. `ITEM-11153`). If missing, ask for
 - **Checking out main locally before branching** — pollutes the current workspace; the script branches from `origin/main` directly, never check out main yourself.
 - **Always updating the ticket** — only update when scoping added material new information; trivial rewording is noise for the ticket's watchers.
 - **Replacing the ticket body wholesale** — `update-notion` already handles preserving media/context; still, merge new info into the existing structure rather than overwriting it.
-- **Blocking on the Notion update** — the sync is a side effect; dispatch it in the background and move on to planning. Waiting for MCP round-trips before starting `writing-plans` wastes the user's time.
+- **Blocking on the Notion update** — the sync is a side effect; dispatch it in the background and move on to the final report. Waiting for MCP round-trips before reporting wastes the user's time.
 - **Dispatching the background agent without the page URL or merged content** — it cannot see the conversation; an underspecified prompt forces it to redo the database query or, worse, guess at content.
-- **Stopping after the ticket sync** — always end by handing off to `development:writing-plans`; the Notion update is a side effect, not the goal.
+- **Continuing into planning or implementation** — setup ends with the scoped requirements; do not invoke `development:writing-plans` or write code unless the user asks.
