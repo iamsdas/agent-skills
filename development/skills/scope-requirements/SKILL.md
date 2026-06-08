@@ -26,7 +26,6 @@ Use this skill to prevent premature implementation planning. First align on prod
    - Run independent explorations in parallel; consolidate their findings before moving on.
 
 3. Refine expectations without implementation details:
-   - **HARD GATE: do NOT invoke AskUserQuestion in the same turn as the "Product Overview" and "What I Found" sections (Response Template below).** Output the summary, end with "*Reply (anything) to continue to clarifying questions.*", and END THE TURN — no tool calls after the summary. The first AskUserQuestion comes only in the next turn, after the user replies. Rationale: text emitted in the same turn as AskUserQuestion gets scrolled past when the question dialog renders, so the user never actually sees it. This applies equally when this skill runs as a sub-skill of another workflow (e.g. `setup-task`) — having read the ticket is not a substitute for showing the user the summary.
    - **Present findings before asking anything.** Before the first question, share a short "What I found" summary of the exploration: current behavior, the gap, and each assumption, risk, or dependency you intend to ask about — with a one-line plain-language explanation of why it matters. Never ask about a problem, edge case, or mitigation the user has not yet been shown.
    - Every question must be self-contained: state the finding that motivated it (in the question text or the option descriptions), then ask. "Exploration found X, which means Y could happen — how should it behave?" — not "How should we handle Y?".
    - Ask focused clarification questions about outcomes, scope, constraints, and acceptance signals — informed by the exploration findings.
@@ -60,7 +59,6 @@ Use this skill to prevent premature implementation planning. First align on prod
 - Treat confirmation as required, not optional.
 - Never offer the "scope is complete" confirmation while open questions remain — resolve them first.
 - Never ask a question whose motivating context the user hasn't seen. Surface the finding first, then ask.
-- The first AskUserQuestion call must come in a LATER TURN than the "Product Overview" / "What I Found" summary — output the summary, end the turn, wait for the user's reply, then ask. Never put the summary and AskUserQuestion in the same turn; the dialog hides same-turn text. This holds even when invoked from another skill like `setup-task`.
 
 ## Response Template
 
