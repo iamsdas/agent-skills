@@ -9,9 +9,12 @@ Update a Notion ticket's body content by its item ID (e.g. `ITEM-11153`).
 
 ## Workflow
 
-1. **Search for the ticket** using `mcp__claude_ai_Notion__notion-search` with the ticket ID as the query.
+1. **Find the ticket in the Engineering Tasks database.**
+   - All `ITEM-<n>` tickets are rows in the **Engineering Tasks** database (data source `collection://f23dba4b-107c-4b12-ae4e-4274fd87a243`). The `ITEM-<n>` identifier is the row's `userDefined:ID` property — **not** the page title or body — so `notion-search` won't find it by ID.
+   - Query the **Table** view with `mcp__claude_ai_Notion__notion-query-database-view` and match the row whose `userDefined:ID` equals the requested ID. The output is large — process it rather than reading raw, and paginate with `next_cursor` if the ID isn't on the first page.
+   - No match → tell the user and stop.
 
-2. **Confirm the match** — pick the result whose title contains the ticket ID. Extract the Notion page UUID from the result.
+2. **Confirm the match** — extract the matched row's `url` (and Notion page UUID) for the next steps.
 
 3. **Fetch current content** using `mcp__claude_ai_Notion__notion-fetch` with the page URL or UUID so the user can see what's there.
 
@@ -24,10 +27,12 @@ Update a Notion ticket's body content by its item ID (e.g. `ITEM-11153`).
 ## Tool Reference
 
 ```
-# Search by ticket ID
-mcp__claude_ai_Notion__notion-search  query="ITEM-11153"
+# Find the ticket by ID: query the Engineering Tasks Table view,
+# match the row whose userDefined:ID == the requested ID
+mcp__claude_ai_Notion__notion-query-database-view
+  # data source: collection://f23dba4b-107c-4b12-ae4e-4274fd87a243
 
-# Fetch current page (use the URL from search result)
+# Fetch current page (use the URL from the matched row)
 mcp__claude_ai_Notion__notion-fetch  url="<notion_page_url>"
 
 # Update page body
@@ -38,8 +43,8 @@ mcp__claude_ai_Notion__notion-update-page
 
 ## Notes
 
-- `ITEM-11153` style IDs come from Notion databases with an auto-incrementing ID property — search returns the matching page.
-- The page UUID looks like `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`; extract it from the search result's `id` or `url` field.
+- `ITEM-<n>` IDs are the `userDefined:ID` property of rows in the Engineering Tasks database — query the Table view and match that property; `notion-search` won't find them by ID.
+- The page UUID looks like `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`; extract it from the matched row's `id` or `url` field.
 - `notion-update-page` replaces the page body — fetch first so nothing is lost unintentionally.
 - Media includes: inline images, file attachments, video/audio embeds, bookmarks, and any blocks with URLs pointing to external resources. Detect these in the fetched content before writing.
 - If the existing body has a prior "Attachments & Prior Context" section, merge its contents into the new one rather than duplicating it.
