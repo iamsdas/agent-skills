@@ -1,6 +1,6 @@
 ---
-name: notion
-description: Work with Notion Engineering Tasks tickets by their item ID (e.g. ITEM-11153) — fetch a ticket's content or update its body via the Notion MCP. Triggers on /notion <ID>, or any request to look up, read, view, or update a Notion ticket by its item ID.
+name: notion-ticket
+description: Work with Notion Engineering Tasks tickets by their item ID (e.g. ITEM-11153) — fetch a ticket's content or update its body via the Notion MCP. Triggers on /notion-ticket <ID>, or any request to look up, read, view, or update a Notion ticket by its item ID.
 ---
 
 # Notion Tickets
