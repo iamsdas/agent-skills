@@ -75,8 +75,6 @@ Use this structure in the pre-confirmation phase:
 
 - **<Finding>**: <what exploration surfaced, where, and why it matters to this request — plain language>
 - **<Assumption / risk>**: <the assumption or failure mode, and what it implies for the user>
-
-*Reply (anything) to continue to clarifying questions.*
 ```
 
 Every finding, assumption, or risk you plan to question the user about MUST appear in "What I Found" first. **End the turn after this summary** — wait for the user's reply, then in the next turn invoke AskUserQuestion with up to 4 clarifying questions (batch independent ones together), each referencing its finding:
