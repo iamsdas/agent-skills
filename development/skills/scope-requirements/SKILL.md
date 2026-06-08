@@ -77,7 +77,7 @@ Use this structure in the pre-confirmation phase:
 - **<Assumption / risk>**: <the assumption or failure mode, and what it implies for the user>
 ```
 
-Every finding, assumption, or risk you plan to question the user about MUST appear in "What I Found" first. **End the turn after this summary** — wait for the user's reply, then in the next turn invoke AskUserQuestion with up to 4 clarifying questions (batch independent ones together), each referencing its finding:
+Every finding, assumption, or risk you plan to question the user about MUST appear in "What I Found" first. After the summary, invoke AskUserQuestion with up to 4 clarifying questions (batch independent ones together), each referencing its finding:
 
 ```
 AskUserQuestion(questions=[
