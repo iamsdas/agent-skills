@@ -45,10 +45,10 @@ Use this skill to prevent premature implementation planning. First align on prod
    - Use AskUserQuestion to ask if the scope is complete, with options like "Yes, scope is complete" and "No, keep refining".
    - If user does not confirm, continue refinement.
 
-5. Output the final scope document:
+5. Output the final scope document and stop:
    - Once the user confirms the scope is complete, produce the final document using the template below.
    - Output it as rendered markdown (no fenced code block, no preamble, no trailing commentary) so it renders with headers and formatting in the CLI.
-   - Do NOT switch to planning mode. Do NOT write implementation steps.
+   - Then finish quietly. Do NOT switch to planning mode, write implementation steps, hand off to a planning agent, or suggest next steps. Scoping is done; the user decides what happens next.
 
 ## Guardrails
 
@@ -59,6 +59,7 @@ Use this skill to prevent premature implementation planning. First align on prod
 - Treat confirmation as required, not optional.
 - Never offer the "scope is complete" confirmation while open questions remain — resolve them first.
 - Never ask a question whose motivating context the user hasn't seen. Surface the finding first, then ask.
+- After outputting the final scope document, finish quietly — no handoff to planning, no implementation steps, no "next steps" suggestions. The user drives what comes next.
 
 ## Response Template
 
@@ -90,8 +91,8 @@ After all questions are answered, output a "Current understanding" recap and inv
 
 ```
 AskUserQuestion(questions=[
-  { question: "Is the scope complete and ready to hand off?", header: "Confirm scope", options: [
-    {label: "Yes, hand it off", description: "Produce the final PRD and hand off to a planning agent"},
+  { question: "Is the scope complete?", header: "Confirm scope", options: [
+    {label: "Yes, scope is complete", description: "Produce the final scope document and finish"},
     {label: "No, keep refining", description: "Continue asking clarifying questions"}
   ]}
 ])
