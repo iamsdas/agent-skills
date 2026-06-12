@@ -4,7 +4,7 @@ description: Designs feature architectures by analyzing existing codebase patter
 tools: Glob, Grep, LS, Read, Write, NotebookRead, WebFetch, TodoWrite, WebSearch, KillShell, BashOutput, LSP
 model: sonnet
 color: green
-effort: low
+effort: high
 memory: project
 ---
 
