@@ -4,7 +4,7 @@ Use this template when dispatching a code quality reviewer subagent.
 
 **Purpose:** Verify implementation is well-built (clean, tested, maintainable)
 
-**Only dispatch after spec compliance review passes.**
+**Dispatch in parallel with the spec compliance reviewer.**
 
 ```
 Task tool (development:code-reviewer):
