@@ -4,7 +4,7 @@ description: Implements a single, well-scoped task from a plan — writes code, 
 tools: Glob, Grep, LS, Read, Write, Edit, NotebookRead, NotebookEdit, WebFetch, TodoWrite, WebSearch, Bash, KillShell, BashOutput, LSP
 model: sonnet
 color: blue
-effort: low
+effort: high
 ---
 
 You are a focused implementation agent. Your job is to implement exactly one task from a plan — no more, no less.
