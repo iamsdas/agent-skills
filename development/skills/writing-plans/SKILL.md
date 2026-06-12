@@ -18,7 +18,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 ## Execution Rules
 
 - **Announce:** Write exactly one line before starting: "I'm using the writing-plans skill to create the implementation plan."
-- **Task tracking:** Before starting, create one task per phase using TaskCreate. Mark each task `in_progress` when beginning it, `completed` when done. This renders a live-updating checklist for the user.
+- **Task tracking:** Before starting, create one task per phase using TaskCreate. Mark each task `in_progress` when beginning it, `completed` when done. This renders a live-updating checklist for the user. These tasks are scaffolding for this skill only — when the skill ends (the Phase 6 handoff, or planning abandoned mid-way), delete every task it created via TaskUpdate with status `deleted`, so the checklist doesn't linger and absorb later, unrelated work.
 - **Sequential:** Run phases in order. Each must complete before the next begins.
 - **Two routes — pick in Phase 1.** Don't fan out by default. The full multi-agent path (Phases 2–4) is for large or unfamiliar work; for small, well-understood changes take the **fast path** (one combined pass). Phase 1 presents its scope read and lets the user choose. Over-provisioning agents on a localized change is the main reason planning feels slow.
 - **Never execute the plan yourself.** This skill *writes* the plan; it does not build. After the plan is approved, hand off to the `subagent-driven-development` skill (Phase 6) — do not start editing files, writing tests, or running the plan's steps in this conversation.
@@ -94,7 +94,8 @@ Scale the agent count to the route — do not fan out wider than the task needs.
 **Task:**
 
 1. **First, check for a systemic planning gap.** If review or the user's refinement exposed a *systemic* gap — a class of case the plan dropped that the planning process should have surfaced (e.g. "we keep missing concurrency") — invoke the `preventing-recurrence` sub-skill before handing off. Tell it the gap was caught *at planning*, so the fix lands in the planning machinery (this skill or the plan reviewer prompt), not downstream.
-2. **Then hand off execution.** Invoke the `subagent-driven-development` skill to execute the approved plan (or `executing-plans` if the user wants a separate parallel session). That skill dispatches a fresh subagent per task with review checkpoints — it is what actually builds.
+2. **Clean up the phase checklist.** Delete every phase-tracking task this skill created (TaskUpdate with status `deleted`). The checklist was scaffolding for planning; leaving it alive makes every subsequent task in the session pile into it.
+3. **Then hand off execution.** Invoke the `subagent-driven-development` skill to execute the approved plan (or `executing-plans` if the user wants a separate parallel session). That skill dispatches a fresh subagent per task with review checkpoints — it is what actually builds.
 
 **Output:** Execution begins under `subagent-driven-development`, not under this skill.
 
