@@ -7,9 +7,9 @@ description: Use when you have a clear spec or requirements for a multi-step cod
 
 ## Overview
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, where to look for reference, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+Write implementation plans for a capable engineer who can read code, follow established patterns, and fill in routine details on their own — but who starts with zero context for our codebase and its decisions. Document what they can't infer from the code: which files to touch for each task, the pattern to follow and where it lives, project-specific gotchas, parallel implementations that must change in lockstep, and how to verify the work. Don't spell out what a competent engineer would do anyway. DRY. YAGNI. TDD. Commit per task.
 
-Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
+The plan's job is to transfer *decisions and pointers*, not to be an instruction tape. Fewer, larger tasks beat many small ones — every extra task costs a fresh subagent spin-up and context reload.
 
 **No code blocks in plans.** Point to where things are instead — exact file paths and line numbers. The engineer reads the code; the plan tells them where to look and what to do.
 
@@ -121,7 +121,7 @@ Every plan MUST start with this header:
 
 ### Task Structure
 
-Each task follows this format. Tasks are bite-sized — each step is one action (2-5 minutes):
+Each task is one coherent unit of work that ends in a passing test suite and a commit — a slice a competent engineer ships in one sitting, not one action. Split tasks only at boundaries where the guidance genuinely changes (different subsystem, different pattern to follow, a checkpoint worth reviewing between them) — never just to make tasks smaller. Most plans should have 3-7 tasks. Do not break a task into write-test / run-test / implement / commit micro-steps; state the TDD expectation once and let the engineer execute it.
 
 ````markdown
 ### Task N: [Component Name]
@@ -131,43 +131,30 @@ Each task follows this format. Tasks are bite-sized — each step is one action 
 - Modify: `exact/path/to/existing.py:123-145`
 - Test: `tests/exact/path/to/test.py`
 
-- [ ] **Step 1: Write the failing test**
+**What to do:**
 
-Add a test to `tests/path/test.py` modeled after the existing test at `tests/path/test.py:45`. It should assert that `function(input)` returns `expected`.
+Test-first: add tests to `tests/path/test.py` modeled after the existing test at `tests/path/test.py:45`, asserting that `function(input)` returns `expected` (cover the empty-input and duplicate-key cases — see `tests/path/test.py:60` for how those are set up). Then implement `function` in `src/path/file.py` following the pattern at `src/path/file.py:78`; see `src/path/other.py:12-30` for how similar logic is handled.
 
-- [ ] **Step 2: Run test to verify it fails**
+**Verify:** `pytest tests/path/test.py -v` — all pass.
 
-Run: `pytest tests/path/test.py::test_name -v`
-Expected: FAIL with "function not defined"
-
-- [ ] **Step 3: Implement**
-
-Add `function` to `src/path/file.py` following the pattern at `src/path/file.py:78`. See `src/path/other.py:12-30` for how similar logic is handled.
-
-- [ ] **Step 4: Run test to verify it passes**
-
-Run: `pytest tests/path/test.py::test_name -v`
-Expected: PASS
-
-- [ ] **Step 5: Commit**
-
-`git add tests/path/test.py src/path/file.py && git commit -m "feat: add specific feature"`
+**Commit:** `feat: add specific feature`
 ````
 
 ### Rules
 
-Every step must contain the actual content an engineer needs. These are **plan failures** — never write them:
+Every task must contain the actual content an engineer needs. These are **plan failures** — never write them:
 
 - "TBD", "TODO", "implement later", "fill in details"
 - "Add appropriate error handling" / "add validation" / "handle edge cases"
 - "Write tests for the above" without pointing to a specific file and reference pattern
 - "Similar to Task N" — repeat the pointer, the engineer may be reading tasks out of order
 - Changing one path while leaving its siblings untouched — when the same logic lives in multiple parallel places (sibling call sites, duplicated handlers, the same operation for another entity/platform), every task that modifies one MUST list all the others by file:line and apply the same change to each
-- Steps that say what to do without pointing to where (exact file:line references required)
+- Tasks that say what to do without pointing to where (exact file:line references required)
 - Code blocks — describe what to build and where to look, not what to write
+- Micro-step checklists (write test / run test / implement / commit as separate steps) — that's the engineer's job to sequence, not the plan's
 
 Always use:
 
 - Exact file paths and line numbers — point to where things are, never write them out
-- Exact commands with expected output
-- DRY, YAGNI, TDD, frequent commits
+- Exact verification commands with expected outcome
+- DRY, YAGNI, TDD, one commit per task

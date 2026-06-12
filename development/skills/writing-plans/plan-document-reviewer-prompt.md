@@ -19,9 +19,9 @@ Task tool (development:code-reviewer):
 
     | Category | What to Look For |
     |----------|------------------|
-    | Completeness | TODOs, placeholders, incomplete tasks, missing steps |
+    | Completeness | TODOs, placeholders, incomplete tasks, missing requirements |
     | Spec Alignment | Plan covers spec requirements, no major scope creep |
-    | Task Decomposition | Tasks have clear boundaries, steps are actionable |
+    | Task Decomposition | Tasks have clear boundaries and are coherent units of work — flag over-fragmentation (micro-step tasks that should be merged) as well as vagueness |
     | Buildability | Could an engineer follow this plan without getting stuck? |
 
     ## Calibration
@@ -40,7 +40,7 @@ Task tool (development:code-reviewer):
     **Status:** Approved | Issues Found
 
     **Issues (if any):**
-    - [Task X, Step Y]: [specific issue] - [why it matters for implementation]
+    - [Task X]: [specific issue] - [why it matters for implementation]
 
     **Recommendations (advisory, do not block approval):**
     - [suggestions for improvement]

@@ -25,7 +25,7 @@ Load plan, review critically, execute all tasks, report when complete.
 
 For each task:
 1. Mark as in_progress
-2. Follow each step exactly (plan has bite-sized steps)
+2. Do the work the task describes, using its file:line pointers and following the referenced patterns
 3. Run verifications as specified
 4. Mark as completed
 
