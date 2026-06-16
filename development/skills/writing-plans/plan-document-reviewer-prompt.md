@@ -21,7 +21,7 @@ Task tool (development:code-reviewer):
     |----------|------------------|
     | Completeness | TODOs, placeholders, incomplete tasks, missing requirements |
     | Spec Alignment | Plan covers spec requirements, no major scope creep |
-    | Task Decomposition | Tasks have clear boundaries and are coherent units of work — flag over-fragmentation (micro-step tasks that should be merged) as well as vagueness |
+    | Task Decomposition | Tasks have clear boundaries and are coherent units of work — flag both over-fragmentation (micro-step tasks that should be merged) and over-broad tasks (one task spanning several unrelated concerns or too large to review as a single diff, which should be split), as well as vagueness |
     | Buildability | Could an engineer follow this plan without getting stuck? |
 
     ## Calibration

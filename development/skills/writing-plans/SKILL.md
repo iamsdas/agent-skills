@@ -9,7 +9,7 @@ description: Use when you have a clear spec or requirements for a multi-step cod
 
 Write implementation plans for a capable engineer who can read code, follow established patterns, and fill in routine details on their own — but who starts with zero context for our codebase and its decisions. Document what they can't infer from the code: which files to touch for each task, the pattern to follow and where it lives, project-specific gotchas, parallel implementations that must change in lockstep, and how to verify the work. Don't spell out what a competent engineer would do anyway. DRY. YAGNI. TDD. Commit per task.
 
-The plan's job is to transfer *decisions and pointers*, not to be an instruction tape. Fewer, larger tasks beat many small ones — every extra task costs a fresh subagent spin-up and context reload.
+The plan's job is to transfer *decisions and pointers*, not to be an instruction tape. Each task is one subagent's entire job — size it so the subagent keeps the thread and its diff reviews in one sitting, yet so it still earns its spin-up and context reload. Both directions cost you: many tiny tasks waste reloads, while one sprawling task overwhelms the subagent and produces a diff no one can review. Aim for the largest coherent slice that still reviews cleanly.
 
 **Plan the leanest thing that works.** The plan is where over-engineering is *introduced* — the implementer just builds what you specify. So every task, abstraction, and dependency must earn its place here: does it need to exist *now*, or is it speculative ("for later")? Cut speculative scope or mark it explicitly deferred. Prefer the standard library, then native platform features, then an already-installed dependency — never plan a new dependency for what a few lines do. No abstraction with a single implementation, no config for a value that never changes, fewest files that hold the responsibilities cleanly; an abstraction earns its place only with a second concrete caller in scope. This is design discipline, not corner-cutting — never plan away input validation at trust boundaries, error handling that prevents data loss, security, or accessibility.
 
@@ -123,7 +123,7 @@ Every plan MUST start with this header:
 
 ### Task Structure
 
-Each task is one coherent unit of work that ends in a passing test suite and a commit — a slice a competent engineer ships in one sitting, not one action. Split tasks only at boundaries where the guidance genuinely changes (different subsystem, different pattern to follow, a checkpoint worth reviewing between them) — never just to make tasks smaller. Most plans should have 3-7 tasks. Do not break a task into write-test / run-test / implement / commit micro-steps; state the TDD expectation once and let the engineer execute it.
+Each task is one coherent unit of work that ends in a passing test suite and a commit — and it is also one subagent's entire assignment, so it must stay reviewable as a single diff. Split at boundaries where the guidance genuinely changes (different subsystem, different pattern to follow, a checkpoint worth reviewing between them), **and** split a task that has grown too broad — it spans several unrelated concerns, you can't state its goal without saying "and also", or its diff would be too large to review in one pass — even when it all lives in one subsystem. Don't split merely to make tasks smaller, and don't break a task into write-test / run-test / implement / commit micro-steps; state the TDD expectation once and let the engineer execute it. Task count falls out of these boundaries, not a target you steer toward — most plans land around 3-7, but a genuinely broad feature needs more, and forcing it into fewer just makes each task too big to execute or review well.
 
 ````markdown
 ### Task N: [Component Name]
@@ -154,6 +154,7 @@ Every task must contain the actual content an engineer needs. These are **plan f
 - Tasks that say what to do without pointing to where (exact file:line references required)
 - Code blocks — describe what to build and where to look, not what to write
 - Micro-step checklists (write test / run test / implement / commit as separate steps) — that's the engineer's job to sequence, not the plan's
+- Over-broad tasks — one task spanning several unrelated concerns, or whose diff is too large to review in one pass; split it at the seam even within a single subsystem
 - Speculative scope — a task, abstraction, or new dependency with no concrete caller or named near-term need in this plan; cut it or mark it explicitly deferred
 - A new dependency for what the stdlib, a native platform feature, or a few lines already do
 
