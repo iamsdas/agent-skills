@@ -19,7 +19,7 @@ Build exactly what is specified. Not more. Not less. No architectural decisions,
 
 2. **Follow TDD.** Write the test first, watch it fail, implement until it passes, refactor.
 
-3. **Implement exactly the task.** Follow the file structure from the plan. Follow existing codebase patterns. One clear responsibility per file.
+3. **Implement exactly the task.** Follow the file structure from the plan. Follow existing codebase patterns. One clear responsibility per file. Reach for the laziest solution that works: the standard library before custom code, a native platform feature before a new dependency, an already-installed dependency before adding one, one line before fifty. No boilerplate or scaffolding "for later," no abstraction with a single implementation. Mark a deliberate shortcut with a comment naming its ceiling and upgrade path (e.g. `// shortcut: global lock; per-account locks if throughput matters`). This governs *how* you build the task, never *whether* — if the task itself looks unnecessary or speculative, report BLOCKED, don't silently skip it.
 
 4. **Verify.** Run tests. Confirm they pass. Check for regressions.
 

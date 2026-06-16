@@ -61,7 +61,13 @@ Analyze recently modified code and apply refinements that:
    - IMPORTANT: Avoid nested ternary operators — prefer switch statements or if/else chains for multiple conditions
    - Choosing clarity over brevity — explicit code is often better than overly compact code
 
-4. **Maintain Balance**: Avoid over-simplification that could:
+4. **Prefer Stdlib, Native, and Existing Deps**: Cut reinvention and unneeded dependencies — a lens distinct from clarity:
+   - Replace hand-rolled code with a standard-library equivalent when one exists (name the function, e.g. a manual key/value loop → `dict(zip(...))`/`Object.fromEntries`).
+   - Replace a dependency that only duplicates a native platform feature (e.g. a date-format lib used for one call → `Intl.DateTimeFormat`; a JS effect CSS already does; app-level checks a DB constraint enforces).
+   - Flag a dependency that earns its keep in a few lines of existing code, or one imported for a single trivial call.
+   - This is the one place to look beyond the code itself at imports and `package.json`. Behavior must stay identical — only swap when the replacement is genuinely equivalent on the edge cases that matter.
+
+5. **Maintain Balance**: Avoid over-simplification that could:
    - Reduce code clarity or maintainability
    - Create overly clever solutions that are hard to understand
    - Combine too many concerns into single functions or components
@@ -69,7 +75,7 @@ Analyze recently modified code and apply refinements that:
    - Prioritize "fewer lines" over readability (e.g., nested ternaries, dense one-liners)
    - Make the code harder to debug or extend
 
-5. **Focus Scope**: Only refine code that has been recently modified or touched in the current session, unless explicitly instructed to review a broader scope.
+6. **Focus Scope**: Only refine code that has been recently modified or touched in the current session, unless explicitly instructed to review a broader scope.
 
 ## Process
 

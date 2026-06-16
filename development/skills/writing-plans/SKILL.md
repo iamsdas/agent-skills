@@ -11,6 +11,8 @@ Write implementation plans for a capable engineer who can read code, follow esta
 
 The plan's job is to transfer *decisions and pointers*, not to be an instruction tape. Fewer, larger tasks beat many small ones — every extra task costs a fresh subagent spin-up and context reload.
 
+**Plan the leanest thing that works.** The plan is where over-engineering is *introduced* — the implementer just builds what you specify. So every task, abstraction, and dependency must earn its place here: does it need to exist *now*, or is it speculative ("for later")? Cut speculative scope or mark it explicitly deferred. Prefer the standard library, then native platform features, then an already-installed dependency — never plan a new dependency for what a few lines do. No abstraction with a single implementation, no config for a value that never changes, fewest files that hold the responsibilities cleanly; an abstraction earns its place only with a second concrete caller in scope. This is design discipline, not corner-cutting — never plan away input validation at trust boundaries, error handling that prevents data loss, security, or accessibility.
+
 **No code blocks in plans.** Point to where things are instead — exact file paths and line numbers. The engineer reads the code; the plan tells them where to look and what to do.
 
 ---
@@ -61,7 +63,7 @@ Scale the agent count to the route — do not fan out wider than the task needs.
 
 **Skip this phase entirely on the fast path** — go to Phase 4.
 
-**Thorough path:** Launch 2-3 development:code-architect agents in parallel with different focuses — minimal changes (smallest change, maximum reuse), clean architecture (maintainability, elegant abstractions), or pragmatic balance (speed + quality). Pass each architect the exploration summary from Phase 2 (patterns, parallel implementations, call sites) — they design the high-level approach on those findings rather than re-tracing the codebase. **Only if** the change plausibly makes existing code dead or consolidatable, add one `development:code-simplifier` agent to the same batch (analysis only — it must not edit) to flag dead branches, duplication to consolidate, and abstractions to collapse; skip it when the change is purely additive. Review all approaches and form a recommendation.
+**Thorough path:** Launch 2-3 development:code-architect agents in parallel with different focuses — minimal changes (smallest change, maximum reuse), clean architecture (maintainability, elegant abstractions), or pragmatic balance (speed + quality). Pass each architect the exploration summary from Phase 2 (patterns, parallel implementations, call sites) — they design the high-level approach on those findings rather than re-tracing the codebase. **Only if** the change plausibly makes existing code dead or consolidatable, add one `development:code-simplifier` agent to the same batch (analysis only — it must not edit) to flag dead branches, duplication to consolidate, and abstractions to collapse; skip it when the change is purely additive. Review all approaches and form a recommendation. **Default the recommendation to the leanest approach that meets the spec** — the clean-architecture approach wins only where its abstractions have a concrete second caller or a named, near-term need; otherwise prefer fewer files, fewer layers, and reuse over new structure.
 
 **Output:** Brief summary of each approach, trade-offs comparison, recommendation with reasoning, and any simplification opportunities worth folding into the plan. Present to user and wait for confirmation before continuing.
 
@@ -152,6 +154,8 @@ Every task must contain the actual content an engineer needs. These are **plan f
 - Tasks that say what to do without pointing to where (exact file:line references required)
 - Code blocks — describe what to build and where to look, not what to write
 - Micro-step checklists (write test / run test / implement / commit as separate steps) — that's the engineer's job to sequence, not the plan's
+- Speculative scope — a task, abstraction, or new dependency with no concrete caller or named near-term need in this plan; cut it or mark it explicitly deferred
+- A new dependency for what the stdlib, a native platform feature, or a few lines already do
 
 Always use:
 
