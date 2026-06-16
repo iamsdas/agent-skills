@@ -13,6 +13,8 @@ Execute plan by dispatching fresh subagent per task, with a combined spec-compli
 
 **Continuous execution:** Do not pause to check in with your human partner between tasks. Execute all tasks from the plan without stopping. The only reasons to stop are: BLOCKED status you cannot resolve, ambiguity that genuinely prevents progress, or all tasks complete. "Should I continue?" prompts and progress summaries waste their time — they asked you to execute the plan, so execute it.
 
+**Keep context lean — cost compounds.** Every subagent report lands in your context and is re-sent on every later turn, so a long run with verbose returns is where token cost balloons. Two habits keep it down: (1) the prompt templates and agent definitions already return status + findings + `file:line`, not pasted code or logs — don't ask subagents for more, and don't re-paste their reports into your own messages. Carry forward only the verdict, the commit SHA, and the pointers you need for later tasks. (2) Execution itself stays cheapest in fresh subagent context, which is exactly why each task gets its own subagent — never start doing the implementation work in your own coordinator context. If a plan is large enough that even coordination context grows heavy, that plan should have been sequenced into stages at planning time (see writing-plans).
+
 ## When to Use
 
 ```dot
@@ -139,6 +141,7 @@ Task 2:
 - Skip review loops (reviewer found issues = implementer fixes = re-review)
 - Let implementer self-review replace actual review (both are needed)
 - Move to next task while the reviewer has open issues
+- Re-paste a subagent's full report, diff, or file dump into your own messages (carry forward only the verdict, commit SHA, and file:line pointers — the rest just inflates every later turn)
 
 **If subagent asks questions:**
 - Answer clearly and completely

@@ -47,3 +47,5 @@ Provide a comprehensive analysis that helps developers understand the feature de
 - List of files that you think are absolutely essential to get an understanding of the topic in question
 
 Structure your response for maximum clarity and usefulness. Always include specific file paths and line numbers.
+
+**Return tight.** Your report lands in the parent's context and rides in every later turn, so each line keeps costing tokens for the rest of that session. Reference code by `file:line` — never paste file contents, long code blocks, or command output the reader can re-open. Report the conclusions you reached, not the raw material you read to reach them.

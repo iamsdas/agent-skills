@@ -53,3 +53,5 @@ Start by clearly stating what you're reviewing. For each high-confidence issue, 
 Group issues by severity (Critical vs Important). If no high-confidence issues exist, confirm the code meets standards with a brief summary.
 
 Structure your response for maximum actionability - developers should know exactly what to fix and why.
+
+**Return tight.** Report findings, not the diff. Quote at most the few lines a finding hinges on, anchored by `file:line` — don't paste the reviewed code or command output back. Your report rides in the parent's context every later turn.

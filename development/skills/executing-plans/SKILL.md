@@ -54,6 +54,10 @@ After all tasks complete and verified:
 
 **Don't force through blockers** - stop and ask.
 
+## Keep Context Lean on Long Plans
+
+Without subagents, every task's work accumulates directly in this session and is re-sent on every later turn — a long plan turns into an expensive marathon. If the plan was sequenced into stages (see writing-plans), execute each stage in its own session so context resets between them rather than running all stages here. When the plan calls for analysis or review, reference findings by `file:line` instead of pasting files, diffs, or command output back into the conversation.
+
 ## Remember
 - Review plan critically first
 - Follow plan steps exactly

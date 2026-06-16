@@ -37,3 +37,5 @@ Deliver a decisive, complete architecture blueprint that provides everything nee
 - **Critical Details**: Error handling, state management, testing, performance, and security considerations
 
 Make confident architectural choices rather than presenting multiple options. Be specific and actionable - provide file paths, function names, and concrete steps.
+
+**Return tight.** Your blueprint lands in the parent's context and rides in every later turn. Point to code by `file:line` rather than reproducing it; describe the change to make, don't paste source or diffs. Complete but compact — pointers over pasted material.

@@ -31,7 +31,7 @@ The plan's job is to transfer *decisions and pointers*, not to be an instruction
 
 ### 1. Scope Check & Route
 
-**Task:** Two things. First, determine if the spec covers multiple independent subsystems — each plan should produce working, testable software on its own; propose a split if so. Second, do a quick scope read and choose the route:
+**Task:** Two things. First, determine if the spec covers multiple independent subsystems — each plan should produce working, testable software on its own; propose a split if so. Also split on *size*, not just subsystem boundaries: if executing the whole thing would be one very long session (a dozen-plus tasks, or completed work that piles up faster than it's needed downstream), sequence it into stages that each ship something testable and get executed in a separate session. A fresh session per stage resets accumulated context instead of re-sending an ever-growing history on every turn — the single biggest driver of execution cost. Second, do a quick scope read and choose the route:
 
 - **Which subsystem(s)** the change touches and a rough file count.
 - **Whether the approach is obvious** (clear where the code goes, an established pattern to follow, no real design fork) or has **genuine ambiguity** (multiple viable architectures, unfamiliar area, cross-cutting impact).
@@ -43,7 +43,7 @@ Present that read to the user in 2-3 lines and ask them to choose, recommending 
 
 Use `AskUserQuestion`. Default the recommendation to Fast unless the scope read surfaced real ambiguity or breadth.
 
-**Output:** Single-vs-split decision, the scope read, and the user's route choice.
+**Output:** Single-vs-split decision (by subsystem and by size), the scope read, and the user's route choice.
 
 ---
 
