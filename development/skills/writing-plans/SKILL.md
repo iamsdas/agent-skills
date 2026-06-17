@@ -22,7 +22,7 @@ The plan's job is to transfer *decisions and pointers*, not to be an instruction
 - **Announce:** Write exactly one line before starting: "I'm using the writing-plans skill to create the implementation plan."
 - **Task tracking:** Before starting, create one task per phase using TaskCreate. Mark each task `in_progress` when beginning it, `completed` when done. This renders a live-updating checklist for the user. These tasks are scaffolding for this skill only — when the skill ends (the Phase 6 handoff, or planning abandoned mid-way), delete every task it created via TaskUpdate with status `deleted`, so the checklist doesn't linger and absorb later, unrelated work.
 - **Sequential:** Run phases in order. Each must complete before the next begins.
-- **Two routes — pick in Phase 1.** Don't fan out by default. The full multi-agent path (Phases 2–4) is for large or unfamiliar work; for small, well-understood changes take the **fast path** (one combined pass). Phase 1 presents its scope read and lets the user choose. Over-provisioning agents on a localized change is the main reason planning feels slow.
+- **Two routes — decide in Phase 1.** Don't fan out by default. The full multi-agent path (Phases 2–4) is for large or unfamiliar work; for small, well-understood changes take the **fast path** (one combined pass). Phase 1 does the scope read and picks the route itself — it does not stop to ask. Over-provisioning agents on a localized change is the main reason planning feels slow.
 - **Never execute the plan yourself.** This skill *writes* the plan; it does not build. After the plan is approved, hand off to the `subagent-driven-development` skill (Phase 6) — do not start editing files, writing tests, or running the plan's steps in this conversation.
 
 ---
@@ -36,14 +36,14 @@ The plan's job is to transfer *decisions and pointers*, not to be an instruction
 - **Which subsystem(s)** the change touches and a rough file count.
 - **Whether the approach is obvious** (clear where the code goes, an established pattern to follow, no real design fork) or has **genuine ambiguity** (multiple viable architectures, unfamiliar area, cross-cutting impact).
 
-Present that read to the user in 2-3 lines and ask them to choose, recommending one:
+State that read to the user in 2-3 lines, then pick the route yourself and proceed — do not ask:
 
 - **Fast path** — small, localized, approach is obvious. Skips the parallel fan-out (Phase 2 collapses to a single combined pass; Phase 3's architecture tournament is skipped). Use for most single-subsystem changes.
 - **Thorough path** — large, unfamiliar, or design ambiguity worth comparing approaches. Runs the full multi-agent Phases 2–4.
 
-Use `AskUserQuestion`. Default the recommendation to Fast unless the scope read surfaced real ambiguity or breadth.
+Default to Fast; take the Thorough path only when the scope read surfaced real ambiguity or breadth. Announce the chosen route in one line ("Taking the fast path — single subsystem, obvious approach") and continue to Phase 2. The user can redirect if they disagree; don't block on `AskUserQuestion`.
 
-**Output:** Single-vs-split decision (by subsystem and by size), the scope read, and the user's route choice.
+**Output:** Single-vs-split decision (by subsystem and by size), the scope read, and the chosen route.
 
 ---
 
