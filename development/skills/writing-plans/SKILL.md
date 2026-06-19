@@ -13,7 +13,7 @@ The plan's job is to transfer *decisions and pointers*, not to be an instruction
 
 **Plan the leanest thing that works.** The plan is where over-engineering is *introduced* — the implementer just builds what you specify. So every task, abstraction, and dependency must earn its place here: does it need to exist *now*, or is it speculative ("for later")? Cut speculative scope or mark it explicitly deferred. Prefer the standard library, then native platform features, then an already-installed dependency — never plan a new dependency for what a few lines do. No abstraction with a single implementation, no config for a value that never changes, fewest files that hold the responsibilities cleanly; an abstraction earns its place only with a second concrete caller in scope. This is design discipline, not corner-cutting — never plan away input validation at trust boundaries, error handling that prevents data loss, security, or accessibility.
 
-**No code blocks in plans.** Point to where things are instead — exact file paths and line numbers. The engineer reads the code; the plan tells them where to look and what to do.
+**No code blocks in plans.** Point to where things are instead — exact file paths and line numbers. The engineer reads the code; the plan tells them where to look and what to do. The one exception is diagram fences (` ```mermaid `): they communicate *structure* — control flow, architecture, schema, state — not implementation, so they're allowed and encouraged where a diagram lands faster than prose. See **Visual aids**.
 
 ---
 
@@ -83,6 +83,8 @@ Scale the agent count to the route — do not fan out wider than the task needs.
 
 **Task:** Enter plan mode via `EnterPlanMode`. Write the full plan document directly to the plan file path provided by plan mode (shown in the plan mode system message). A review hook fires automatically after the Write — address any feedback before calling `ExitPlanMode`.
 
+**Render any diagrams for the human.** The terminal shows ` ```mermaid ` fences as raw source. If the plan contains diagrams, render each one with the `mermaid_preview` MCP tool (from the `mermaid` server — `claude-mermaid`) so the reviewer sees the actual diagram, live-reloading at `http://localhost:3737/{preview_id}`, instead of fence text. Use a distinct `preview_id` per diagram (e.g. `architecture`, `flow`). This is best-effort: if the `mermaid` MCP server isn't installed/connected, skip it — never block the plan on it, and never add it as a hard dependency.
+
 **Output:** User approves and exits plan mode.
 
 ---
@@ -142,6 +144,17 @@ Test-first: add tests to `tests/path/test.py` modeled after the existing test at
 **Commit:** `feat: add specific feature`
 ````
 
+### Visual aids
+
+A diagram earns its place only when it carries structure prose can't carry cheaply — keep the same discipline as everything else here. Reach for one when:
+
+- **Control flow / sequencing** is non-obvious (multiple actors, async steps, retries) — ` ```mermaid ` `sequenceDiagram` or `flowchart`.
+- **Architecture / module boundaries** matter — `flowchart` showing how the pieces the plan touches connect.
+- **Data model / schema** changes — `erDiagram`.
+- **State machines** — `stateDiagram-v2`.
+
+Don't diagram the trivial (a two-step linear flow, a single file's change). Write mermaid fences inline in the plan markdown — they render natively on GitHub and in IDE previews, and render live during review via the `mermaid_preview` MCP tool (Phase 5). File maps stay as markdown tables or a tree in a fenced block; open questions stay as task-list checkboxes; annotated diffs stay as ` ```diff ` fences. No external service or build step — the plan is still a single `.md` file.
+
 ### Rules
 
 Every task must contain the actual content an engineer needs. These are **plan failures** — never write them:
@@ -152,7 +165,7 @@ Every task must contain the actual content an engineer needs. These are **plan f
 - "Similar to Task N" — repeat the pointer, the engineer may be reading tasks out of order
 - Changing one path while leaving its siblings untouched — when the same logic lives in multiple parallel places (sibling call sites, duplicated handlers, the same operation for another entity/platform), every task that modifies one MUST list all the others by file:line and apply the same change to each
 - Tasks that say what to do without pointing to where (exact file:line references required)
-- Code blocks — describe what to build and where to look, not what to write
+- Code blocks — describe what to build and where to look, not what to write (` ```mermaid ` diagram fences are the exception — they show structure, not implementation; see Visual aids)
 - Micro-step checklists (write test / run test / implement / commit as separate steps) — that's the engineer's job to sequence, not the plan's
 - Over-broad tasks — one task spanning several unrelated concerns, or whose diff is too large to review in one pass; split it at the seam even within a single subsystem
 - Speculative scope — a task, abstraction, or new dependency with no concrete caller or named near-term need in this plan; cut it or mark it explicitly deferred

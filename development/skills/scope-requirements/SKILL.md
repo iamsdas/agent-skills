@@ -27,6 +27,7 @@ Use this skill to prevent premature implementation planning. First align on prod
 
 3. Refine expectations without implementation details:
    - **Present findings before asking anything.** Before the first question, share a short "What I found" summary of the exploration: current behavior, the gap, and each assumption, risk, or dependency you intend to ask about — with a one-line plain-language explanation of why it matters. Never ask about a problem, edge case, or mitigation the user has not yet been shown.
+   - **For bigger changes, draw the flow.** When the request spans multiple affected flows, involves a migration, or changes a branching/multi-step behavior, include a ` ```mermaid ` diagram of the **current vs. desired behavior** in the "What I found" summary — a `flowchart` or `sequenceDiagram` at the *user-journey / system-behavior* level. It grounds the refinement questions in a shared picture. Keep it strictly behavioral: who triggers what and what happens — **never** module boundaries, code structure, or libraries (those belong to planning, not scoping). Skip the diagram for a small single-flow change. Render each diagram for the user with the `mermaid_preview` MCP tool (`mermaid` server / `claude-mermaid`, live preview at `http://localhost:3737/{preview_id}`) so they see the rendered flow, not fence text; best-effort — if that MCP server isn't connected, leave the fence inline and move on, never block on it.
    - Every question must be self-contained: state the finding that motivated it (in the question text or the option descriptions), then ask. "Exploration found X, which means Y could happen — how should it behave?" — not "How should we handle Y?".
    - Ask focused clarification questions about outcomes, scope, constraints, and acceptance signals — informed by the exploration findings.
    - Understand how the new change is meant to be used — who triggers it, in what context, and what the expected interaction flow looks like.
@@ -59,6 +60,7 @@ Use this skill to prevent premature implementation planning. First align on prod
 - Treat confirmation as required, not optional.
 - Never offer the "scope is complete" confirmation while open questions remain — resolve them first.
 - Never ask a question whose motivating context the user hasn't seen. Surface the finding first, then ask.
+- Any diagram stays at the behavior/flow level (user journeys, system behavior). A diagram showing modules, layers, code structure, or libraries is implementation detail and violates the no-architecture rule — don't draw it during scoping.
 - After outputting the final scope document, finish quietly — no handoff to planning, no implementation steps, no "next steps" suggestions. The user drives what comes next.
 
 ## Response Template
@@ -112,7 +114,7 @@ Once confirmed, output ONLY the following — no intro sentence, no "here is you
 
 ## Affected Flows
 
-<List the user journeys or system flows that will behave differently after this change. For each, briefly describe how the flow changes.>
+<List the user journeys or system flows that will behave differently after this change. For each, briefly describe how the flow changes. For a bigger change, carry the current-vs-desired behavior ` ```mermaid ` diagram from "What I found" into this section — behavior level only, no architecture.>
 
 - **<Flow name>**: <how is it affected>
 - **<Flow name>**: <how is it affected>
