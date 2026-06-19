@@ -31,6 +31,8 @@ requesting-code-review  →  verify the work meets requirements
 deep-review             →  deep pre-merge review (breaking changes, migrations, coverage)
         ↓
 finishing-a-development-branch → decide how to integrate: merge, PR, or cleanup
+        ↓
+creating-pull-requests  →  open the PR with summary, mermaid visuals, usage, and test plan
 ```
 
 ### Fixing a bug
