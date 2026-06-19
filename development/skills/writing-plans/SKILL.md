@@ -176,7 +176,7 @@ Every task must contain the actual content an engineer needs. These are **plan f
 - Tasks that say what to do without pointing to where (exact file:line references required)
 - Code blocks — describe what to build and where to look, not what to write (ASCII diagrams are the exception — they show structure, not implementation; see Visual aids)
 - Micro-step checklists (write test / run test / implement / commit as separate steps) — that's the engineer's job to sequence, not the plan's
-- Over-broad tasks — one task spanning several unrelated concerns, or whose diff is too large to review in one pass; split it at the seam even within a single subsystem
+- Over-broad tasks — one task spanning several unrelated concerns, or whose diff is too large to review in one pass; split it at the seam even within a single subsystem. Watch for the bundling tell: a title or goal you can only state with "and" between distinct concerns ("scaffold the dirs *and* retarget the model *and* update the templates *and* fix the callers"). Each task becomes one subagent's entire job, and a subagent can't be steered mid-run — an over-broad task grinds for a long time and produces an unreviewable diff before anyone can intervene. Split it into one focused task per concern.
 - Speculative scope — a task, abstraction, or new dependency with no concrete caller or named near-term need in this plan; cut it or mark it explicitly deferred
 - A new dependency for what the stdlib, a native platform feature, or a few lines already do
 

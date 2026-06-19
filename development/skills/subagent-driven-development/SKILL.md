@@ -15,6 +15,8 @@ Execute plan by dispatching fresh subagent per task, with a combined spec-compli
 
 **Keep context lean — cost compounds.** Every subagent report lands in your context and is re-sent on every later turn, so a long run with verbose returns is where token cost balloons. Two habits keep it down: (1) the prompt templates and agent definitions already return status + findings + `file:line`, not pasted code or logs — don't ask subagents for more, and don't re-paste their reports into your own messages. Carry forward only the verdict, the commit SHA, and the pointers you need for later tasks. (2) Execution itself stays cheapest in fresh subagent context, which is exactly why each task gets its own subagent — never start doing the implementation work in your own coordinator context. If a plan is large enough that even coordination context grows heavy, that plan should have been sequenced into stages at planning time (see writing-plans).
 
+**Right-size each task before you dispatch it — you cannot babysit a running subagent.** An `Agent` call blocks until it returns; there is no way to peek at progress or course-correct mid-run. A focused-builder handed too much grinds for a long time producing an unreviewable diff, and the only way to stop it is for someone to manually interrupt — by which point the wasted time is already spent and you may have to discard or untangle its sprawling edits. The plan should already size tasks, but **you are the last checkpoint.** Before dispatching, read the task as if it were the subagent's prompt. If it bundles several concerns ("scaffold the dirs *and* retarget the model *and* update the templates *and* fix the callers"), spans many unrelated files, or you can't state its goal without "and also" — split it into focused sub-tasks and dispatch them one at a time. A task whose diff would be too large to review in one pass is too large to implement in one subagent. Splitting up front costs minutes; recovering from a runaway costs the whole run. If you dispatch via a background task instead, set a tight `timeout` (not 30+ minutes) so a stuck agent surfaces instead of blocking indefinitely.
+
 ## When to Use
 
 ```dot
@@ -99,6 +101,8 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 **Never** ignore an escalation or force the same model to retry without changes. If the implementer said it's stuck, something needs to change.
 
+**"Too large" is something you catch *before* dispatch, not only on a BLOCKED report.** A subagent that over-reaches rarely reports `BLOCKED` — it just keeps sprawling silently until someone interrupts it. By then the cost is sunk. So don't rely on the status report to surface an oversized task: apply the right-sizing check above at dispatch time, and when an interrupted or over-reaching subagent *is* the problem, re-split into focused sub-tasks (each a single coherent concern) rather than re-dispatching the same broad task and hoping it goes faster.
+
 ## Prompt Templates
 
 | Template | Agent | Model | Purpose |
@@ -141,6 +145,8 @@ Task 2:
 - Skip review loops (reviewer found issues = implementer fixes = re-review)
 - Let implementer self-review replace actual review (both are needed)
 - Move to next task while the reviewer has open issues
+- Dispatch a task that bundles several concerns or spans many unrelated files without splitting it first — you can't interrupt a synchronous subagent mid-run, so an oversized task can only be stopped by a manual interrupt after the time is already wasted
+- Re-dispatch the same broad task after a runaway/interrupt instead of re-splitting it into focused sub-tasks
 - Re-paste a subagent's full report, diff, or file dump into your own messages (carry forward only the verdict, commit SHA, and file:line pointers — the rest just inflates every later turn)
 
 **If subagent asks questions:**
