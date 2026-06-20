@@ -20,10 +20,10 @@ The plan's job is to transfer *decisions and pointers*, not to be an instruction
 ## Execution Rules
 
 - **Announce:** Write exactly one line before starting: "I'm using the writing-plans skill to create the implementation plan."
-- **Task tracking:** Before starting, create one task per phase using TaskCreate. Mark each task `in_progress` when beginning it, `completed` when done. This renders a live-updating checklist for the user. These tasks are scaffolding for this skill only — when the skill ends (the Phase 6 handoff, or planning abandoned mid-way), delete every task it created via TaskUpdate with status `deleted`, so the checklist doesn't linger and absorb later, unrelated work.
+- **Task tracking:** Before starting, create one task per phase using TaskCreate. Mark each task `in_progress` when beginning it, `completed` when done. This renders a live-updating checklist for the user. These tasks are scaffolding for this skill only — when the skill ends (the Phase 7 handoff, or planning abandoned mid-way), delete every task it created via TaskUpdate with status `deleted`, so the checklist doesn't linger and absorb later, unrelated work.
 - **Sequential:** Run phases in order. Each must complete before the next begins.
 - **Two routes — decide in Phase 1.** Don't fan out by default. The full multi-agent path (Phases 2–4) is for large or unfamiliar work; for small, well-understood changes take the **fast path** (one combined pass). Phase 1 does the scope read and picks the route itself — it does not stop to ask. Over-provisioning agents on a localized change is the main reason planning feels slow.
-- **Never execute the plan yourself.** This skill *writes* the plan; it does not build. After the plan is approved, hand off to the `subagent-driven-development` skill (Phase 6) — do not start editing files, writing tests, or running the plan's steps in this conversation.
+- **Never execute the plan yourself.** This skill *writes* the plan; it does not build. After plan mode exits, hand off to the `executing-plans` skill (Phase 7) — do not start editing files, writing tests, or running the plan's steps in this conversation.
 
 ---
 
@@ -79,29 +79,45 @@ Scale the agent count to the route — do not fan out wider than the task needs.
 
 ---
 
-### 5. Present for Execution
+### 5. Draft & Approve the Human Summary
 
-**Task:** Enter plan mode via `EnterPlanMode`. Write the full plan document directly to the plan file path provided by plan mode (shown in the plan mode system message). A review hook fires automatically after the Write — address any feedback before calling `ExitPlanMode`.
-
-**Output:** User approves and exits plan mode.
-
----
-
-### 6. Hand Off to Execution
-
-**This phase runs *after* plan mode has exited.** Both steps below modify files — `preventing-recurrence` edits the planning machinery, and execution builds the code — so neither can run inside plan mode. Phase 5 ends at `ExitPlanMode`; only then does this phase begin.
-
-**Do not start building.** Writing the plan is the end of *this* skill's job. The moment the plan is approved, STOP and hand off — even though the plan's tasks list exact files, TDD steps, and commit commands, you do not run them yourself in this conversation.
+**This is the single human checkpoint — it happens *before* plan mode.** The user approves the concise, plain-English summary here. Everything downstream (task division, execution, PR, review) then runs hands-off; they should not have to approve again.
 
 **Task:**
 
-1. **First, check for a systemic planning gap.** If review or the user's refinement exposed a *systemic* gap — a class of case the plan dropped that the planning process should have surfaced (e.g. "we keep missing concurrency") — invoke the `preventing-recurrence` sub-skill before handing off. Tell it the gap was caught *at planning*, so the fix lands in the planning machinery (this skill or the plan reviewer prompt), not downstream.
+1. Write the concise human-readable summary to its own file — `<feature-name>-summary.md` (kebab-case the feature name). Default location: the project's plans directory if one exists, else the scratchpad directory. See **Human Summary** under Output Format for its shape; keep it to one screen.
+2. Open it for the user with `SendUserFile`.
+3. Ask for approval of the summary (`AskUserQuestion`, or present and wait). If they want changes, revise the summary file and re-present. Do not proceed to plan mode until the summary is approved.
+
+**Output:** An approved `<feature-name>-summary.md`. This is the WHAT/HOW the user signed off on; the detailed task breakdown in Phase 6 must not deviate from it.
+
+---
+
+### 6. Divide into Committable Tasks (Plan Mode)
+
+**This phase runs only after the summary is approved.** Plan mode here is *not* a second approval of the substance — that was Phase 5. Its job is mechanical: chop the approved summary into the small, committable tasks the agent will execute, with exact file:line pointers, patterns, TDD steps, and commit messages.
+
+**Task:** Enter plan mode via `EnterPlanMode`. Write the full detailed plan document directly to the plan file path provided by plan mode (shown in the plan mode system message) — this is the agent-facing artifact. A review hook fires automatically after the Write — address any feedback before calling `ExitPlanMode`. Do not re-litigate the approved approach; if dividing into tasks surfaces a genuine conflict with the approved summary, update the summary file and re-confirm with the user rather than silently diverging.
+
+**Output:** Approved detailed plan file. Exit plan mode.
+
+---
+
+### 7. Hand Off to Execution
+
+**This phase runs *after* plan mode has exited** — both `preventing-recurrence` and execution modify files, which plan mode forbids. Phase 6 ends at `ExitPlanMode`; only then does this phase begin.
+
+**Do not start building.** Writing the plan is the end of *this* skill's job. The moment plan mode exits, STOP and hand off — even though the plan's tasks list exact files, TDD steps, and commit commands, you do not run them yourself in this conversation.
+
+**Task:**
+
+1. **Check for a systemic planning gap.** If review or the user's refinement exposed a *systemic* gap — a class of case the plan dropped that the planning process should have surfaced (e.g. "we keep missing concurrency") — invoke the `preventing-recurrence` sub-skill before handing off. Tell it the gap was caught *at planning*, so the fix lands in the planning machinery (this skill or the plan reviewer prompt), not downstream.
 2. **Clean up the phase checklist.** Delete every phase-tracking task this skill created (TaskUpdate with status `deleted`). The checklist was scaffolding for planning; leaving it alive makes every subsequent task in the session pile into it.
-3. **Then hand off execution.** Invoke the `subagent-driven-development` skill to execute the approved plan (or `executing-plans` if the user wants a separate parallel session). That skill dispatches a fresh subagent per task with review checkpoints — it is what actually builds.
+3. **Then hand off execution.** By default, invoke the `executing-plans` skill — it executes the plan directly in this session and runs hands-off through to an opened PR and review. Only invoke `subagent-driven-development` instead when the user explicitly opts into it (large, mostly-independent task sets where fresh-subagent-per-task isolation is worth the overhead). Default to `executing-plans`; do not fan out to subagents unasked.
 
-**Output:** Execution begins under `subagent-driven-development`, not under this skill.
+**Output:** Execution begins under `executing-plans` (or `subagent-driven-development` if explicitly opted into), not under this skill.
 
-**Red flag — STOP if you catch yourself:** opening a file to edit, writing a test, or running a plan step right after approval. That means you skipped the handoff. Invoke `subagent-driven-development` instead.
+**Red flag — STOP if you catch yourself:** opening a file to edit, writing a test, or running a plan step right after plan mode exits. That means you skipped the handoff. Invoke `executing-plans` instead.
 
 ---
 
@@ -120,6 +136,30 @@ Every plan MUST start with this header:
 
 ---
 ```
+
+### Human Summary
+
+The `<feature-name>-summary.md` file (Phase 5) is for the *human*, not the implementer. Strip everything an engineer needs but a decision-maker doesn't: no file:line pointers, no patterns-to-follow, no verification commands, no TDD steps. Plain English only, one screen max. Use this shape:
+
+```markdown
+# [Feature Name] — Plan Summary
+
+**What we're building:** [1-2 sentences, plain language — the outcome, not the mechanism]
+
+**How:** [2-3 sentences on the approach at a level a non-author can follow]
+
+## Steps
+1. [Task 1 as a one-line outcome — what will be true after this task]
+2. [Task 2 …]
+…
+
+## Key decisions & risks
+- [Any non-obvious choice made, alternative rejected, or risk worth flagging — one line each]
+
+**How we'll know it works:** [1-2 sentences on overall verification — the user-visible proof, not the test commands]
+```
+
+The summary is written and approved *before* the detailed task division (Phase 6), so its steps are the high-level steps of the work — the Phase 6 task breakdown maps onto these (one task per step, or a step split into a few committable tasks), never contradicts them. If there were no notable decisions or risks, write "None — straightforward implementation." rather than padding.
 
 ### Task Structure
 

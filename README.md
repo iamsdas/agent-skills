@@ -18,22 +18,24 @@ Skills are designed to chain. Two canonical flows:
 ```
 scope-requirements      →  agree on WHAT and WHY (product intent, no implementation)
         ↓
-writing-plans           →  turn the agreed scope into a step-by-step implementation plan
+writing-plans           →  turn the agreed scope into a plan. You approve a concise
+                           human-readable summary FIRST; plan mode then divides the
+                           approved plan into small committable tasks for the agent
         ↓
 using-git-worktrees     →  carve out an isolated workspace for the work
         ↓
-executing-plans         →  execute the plan with review checkpoints (separate session)
-   or
-subagent-driven-development →  execute independent tasks via subagents in the current session
+executing-plans         →  DEFAULT: execute the plan directly in this session, hands-off
+   (opt-in)                 — runs to an opened PR + review, then pauses before merge
+subagent-driven-development →  opt-in: execute mostly-independent tasks via a subagent per task
         ↓
-requesting-code-review  →  verify the work meets requirements
-        ↓
-deep-review             →  deep pre-merge review (breaking changes, migrations, coverage)
-        ↓
-finishing-a-development-branch → decide how to integrate: merge, PR, or cleanup
-        ↓
-creating-pull-requests  →  open the PR with summary, mermaid visuals, usage, and test plan
+   (the execution skill runs these automatically, hands-off, then pauses):
+   creating-pull-requests →  push branch + open PR (summary, mermaid visuals, usage, test plan)
+   deep-review            →  pre-merge review (breaking changes, migrations, coverage)
+        ↓  ── PAUSE: you review the open PR and decide how to land it ──
+finishing-a-development-branch → only when you explicitly choose: local merge, or discard/cleanup
 ```
+
+> **One approval, then hands-off** — the single human checkpoint is approving the concise summary in `writing-plans` (before plan mode). After that, everything runs without check-ins: plan mode divides the work into committable tasks, then `executing-plans` runs all tasks, opens a PR, runs `deep-review`, and **pauses** with the PR link and findings. It never merges on its own. `executing-plans` (direct, in-session) is the default; `subagent-driven-development` is opt-in for large independent task sets. The interactive merge/discard menu in `finishing-a-development-branch` only appears if you ask for it after the pause.
 
 ### Fixing a bug
 

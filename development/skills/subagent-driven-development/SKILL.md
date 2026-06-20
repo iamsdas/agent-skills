@@ -7,6 +7,8 @@ description: Use when executing implementation plans with independent tasks in t
 
 Execute plan by dispatching fresh subagent per task, with a combined spec-compliance and code-quality review after each.
 
+**This is opt-in, not the default.** The default post-plan execution path is `executing-plans` (direct in-session, no per-task subagents). Use this skill only when the user explicitly asks for subagent-driven execution — typically a large plan of mostly-independent tasks where fresh-subagent-per-task context isolation is worth the spin-up overhead. If the user didn't ask for subagents, use `executing-plans`.
+
 **Why subagents:** You delegate tasks to specialized agents with isolated context. By precisely crafting their instructions and context, you ensure they stay focused and succeed at their task. They should never inherit your session's context or history — you construct exactly what they need. This also preserves your own context for coordination work.
 
 **Core principle:** Fresh subagent per task + one combined review (spec and quality in a single pass) = high quality, fast iteration
@@ -64,7 +66,7 @@ digraph process {
     "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
-    "Use finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
+    "Hands-off completion: open PR, deep-review, pause" [shape=box style=filled fillcolor=lightgreen];
 
     "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
@@ -79,7 +81,7 @@ digraph process {
     "Mark task complete in TodoWrite" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
-    "Dispatch final code reviewer subagent for entire implementation" -> "Use finishing-a-development-branch";
+    "Dispatch final code reviewer subagent for entire implementation" -> "Hands-off completion: open PR, deep-review, pause";
 }
 ```
 
@@ -128,8 +130,17 @@ Task 2:
 
 ...
 
-[After all tasks: dispatch final development:code-reviewer → finishing-a-development-branch]
+[After all tasks: hands-off completion → open PR → deep-review → pause]
 ```
+
+## Completion (hands-off)
+
+After the final task's review passes, complete hands-off — same as `executing-plans` Step 3. Do not present an interactive integration menu:
+
+1. **Verify the full suite.** Run the project's test command; fix failures or stop and report. No PR on a red suite.
+2. **Open a PR, hands-off.** Invoke `creating-pull-requests` to push the branch and open the PR.
+3. **Review.** Invoke `deep-review` for the pre-merge review.
+4. **Pause.** Report the PR link and review findings, then STOP. The human decides final integration; `finishing-a-development-branch` runs only if they then choose local merge / discard / cleanup.
 
 ## Red Flags
 
@@ -170,7 +181,9 @@ Task 2:
 - **using-git-worktrees** - Ensures isolated workspace (creates one or verifies existing)
 - **writing-plans** - Creates the plan this skill executes
 - **requesting-code-review** - Code review template for reviewer subagents
-- **finishing-a-development-branch** - Complete development after all tasks
+- **creating-pull-requests** - Opens the PR automatically in hands-off completion
+- **deep-review** - Pre-merge review run automatically before the pause
+- **finishing-a-development-branch** - Only when the user explicitly chooses local merge / discard / cleanup after the pause
 
 **Subagents should use:**
 - **test-driven-development** - Subagents follow TDD for each task
