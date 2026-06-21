@@ -23,7 +23,7 @@ The plan's job is to transfer *decisions and pointers*, not to be an instruction
 - **Task tracking:** Before starting, create one task per phase using TaskCreate. Mark each task `in_progress` when beginning it, `completed` when done. This renders a live-updating checklist for the user. These tasks are scaffolding for this skill only — when the skill ends (the Phase 7 handoff, or planning abandoned mid-way), delete every task it created via TaskUpdate with status `deleted`, so the checklist doesn't linger and absorb later, unrelated work.
 - **Sequential:** Run phases in order. Each must complete before the next begins.
 - **Two routes — decide in Phase 1.** Don't fan out by default. The full multi-agent path (Phases 2–4) is for large or unfamiliar work; for small, well-understood changes take the **fast path** (one combined pass). Phase 1 does the scope read and picks the route itself — it does not stop to ask. Over-provisioning agents on a localized change is the main reason planning feels slow.
-- **Never execute the plan yourself.** This skill *writes* the plan; it does not build. After plan mode exits, hand off to the `executing-plans` skill (Phase 7) — do not start editing files, writing tests, or running the plan's steps in this conversation.
+- **Never execute the plan yourself.** This skill *writes* the plan; it does not build. Once the plan is written, hand off to the `executing-plans` skill (Phase 7) — do not start editing files, writing tests, or running the plan's steps in this conversation.
 
 ---
 
@@ -81,33 +81,33 @@ Scale the agent count to the route — do not fan out wider than the task needs.
 
 ### 5. Draft & Approve the Human Summary
 
-**This is the single human checkpoint — it happens *before* plan mode.** The user approves the concise, plain-English summary here. Everything downstream (task division, execution, PR, review) then runs hands-off; they should not have to approve again.
+**This is the single human checkpoint.** The user approves the concise, plain-English summary here. Everything downstream (task division, execution, PR, review) then runs hands-off; they should not have to approve again.
 
 **Task:**
 
 1. Write the concise human-readable summary to its own file — `<feature-name>-summary.md` (kebab-case the feature name). Default location: the project's plans directory if one exists, else the scratchpad directory. See **Human Summary** under Output Format for its shape; keep it to one screen.
 2. Open it for the user with `SendUserFile`.
-3. Ask for approval of the summary (`AskUserQuestion`, or present and wait). If they want changes, revise the summary file and re-present. Do not proceed to plan mode until the summary is approved.
+3. Ask for approval of the summary (`AskUserQuestion`, or present and wait). If they want changes, revise the summary file and re-present. Do not proceed to the task breakdown until the summary is approved.
 
 **Output:** An approved `<feature-name>-summary.md`. This is the WHAT/HOW the user signed off on; the detailed task breakdown in Phase 6 must not deviate from it.
 
 ---
 
-### 6. Divide into Committable Tasks (Plan Mode)
+### 6. Divide into Committable Tasks
 
-**This phase runs only after the summary is approved.** Plan mode here is *not* a second approval of the substance — that was Phase 5. Its job is mechanical: chop the approved summary into the small, committable tasks the agent will execute, with exact file:line pointers, patterns, TDD steps, and commit messages.
+**This phase runs only after the summary is approved.** It is *not* a second approval of the substance — that was Phase 5. Its job is mechanical: chop the approved summary into the small, committable tasks the agent will execute, with exact file:line pointers, patterns, TDD steps, and commit messages.
 
-**Task:** Enter plan mode via `EnterPlanMode`. Write the full detailed plan document directly to the plan file path provided by plan mode (shown in the plan mode system message) — this is the agent-facing artifact. A review hook fires automatically after the Write — address any feedback before calling `ExitPlanMode`. Do not re-litigate the approved approach; if dividing into tasks surfaces a genuine conflict with the approved summary, update the summary file and re-confirm with the user rather than silently diverging.
+**Task:** Write the full detailed plan document to a plan file — `<feature-name>-plan.md` (kebab-case, same directory as the Phase 5 summary). This is the agent-facing artifact. After writing it, run the plan-document reviewer (`plan-document-reviewer-prompt.md`) over the draft and address any feedback before handing off. Do not re-litigate the approved approach; if dividing into tasks surfaces a genuine conflict with the approved summary, update the summary file and re-confirm with the user rather than silently diverging.
 
-**Output:** Approved detailed plan file. Exit plan mode.
+**Output:** Detailed plan file, ready to hand off to execution.
 
 ---
 
 ### 7. Hand Off to Execution
 
-**This phase runs *after* plan mode has exited** — both `preventing-recurrence` and execution modify files, which plan mode forbids. Phase 6 ends at `ExitPlanMode`; only then does this phase begin.
+**This phase runs once the plan file is written and reviewed.** Phase 6 ends at the finished plan file; only then does this phase begin.
 
-**Do not start building.** Writing the plan is the end of *this* skill's job. The moment plan mode exits, STOP and hand off — even though the plan's tasks list exact files, TDD steps, and commit commands, you do not run them yourself in this conversation.
+**Do not start building.** Writing the plan is the end of *this* skill's job. The moment the plan is written, STOP and hand off — even though the plan's tasks list exact files, TDD steps, and commit commands, you do not run them yourself in this conversation.
 
 **Task:**
 
@@ -117,7 +117,7 @@ Scale the agent count to the route — do not fan out wider than the task needs.
 
 **Output:** Execution begins under `executing-plans` (or `subagent-driven-development` if explicitly opted into), not under this skill.
 
-**Red flag — STOP if you catch yourself:** opening a file to edit, writing a test, or running a plan step right after plan mode exits. That means you skipped the handoff. Invoke `executing-plans` instead.
+**Red flag — STOP if you catch yourself:** opening a file to edit, writing a test, or running a plan step right after the plan file is written. That means you skipped the handoff. Invoke `executing-plans` instead.
 
 ---
 
