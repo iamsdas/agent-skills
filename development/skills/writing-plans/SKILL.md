@@ -87,11 +87,10 @@ Scale the agent count to the route — do not fan out wider than the task needs.
 
 **Task:**
 
-1. Write the concise human-readable summary to its own file — `<feature-name>-summary.md` (kebab-case the feature name). Default location: the project's plans directory if one exists, else the scratchpad directory. See **Human Summary** under Output Format for its shape; keep it to one screen.
-2. Open it for the user with `SendUserFile`.
-3. Ask for approval of the summary (`AskUserQuestion`, or present and wait). If they want changes, revise the summary file and re-present. Do not proceed to the task breakdown until the summary is approved.
+1. Present the concise human-readable summary **inline in the conversation** — do not write it to a file or open it with `SendUserFile`. See **Human Summary** under Output Format for its shape; keep it to one screen.
+2. Ask for approval of the summary (`AskUserQuestion`, or present and wait). If they want changes, revise and re-present inline. Do not proceed to the task breakdown until the summary is approved.
 
-**Output:** An approved `<feature-name>-summary.md`. This is the WHAT/HOW the user signed off on; the detailed task breakdown in Phase 6 must not deviate from it.
+**Output:** An approved inline summary. This is the WHAT/HOW the user signed off on; the detailed task breakdown in Phase 6 must not deviate from it.
 
 ---
 
@@ -99,7 +98,7 @@ Scale the agent count to the route — do not fan out wider than the task needs.
 
 **This phase runs only after the summary is approved.** It is *not* a second approval of the substance — that was Phase 5. Its job is mechanical: chop the approved summary into the small, committable tasks the agent will execute, with exact file:line pointers, patterns, TDD steps, and commit messages.
 
-**Task:** Write the full detailed plan document to a plan file — `<feature-name>-plan.md` (kebab-case, same directory as the Phase 5 summary). This is the agent-facing artifact. After writing it, run the plan-document reviewer (`plan-document-reviewer-prompt.md`) over the draft and address any feedback before handing off. Do not re-litigate the approved approach; if dividing into tasks surfaces a genuine conflict with the approved summary, update the summary file and re-confirm with the user rather than silently diverging.
+**Task:** Write the full detailed plan document to a plan file — `<feature-name>-plan.md` (kebab-case the feature name). Default location: the project's plans directory if one exists, else the scratchpad directory. This is the agent-facing artifact. After writing it, run the plan-document reviewer (`plan-document-reviewer-prompt.md`) over the draft and address any feedback before handing off. Do not re-litigate the approved approach; if dividing into tasks surfaces a genuine conflict with the approved summary, update the summary file and re-confirm with the user rather than silently diverging.
 
 **Output:** Detailed plan file, ready to hand off to execution.
 
@@ -143,7 +142,7 @@ Every plan MUST start with this header:
 
 ### Human Summary
 
-The `<feature-name>-summary.md` file (Phase 5) is for the *human*, not the implementer. Strip everything an engineer needs but a decision-maker doesn't: no file:line pointers, no patterns-to-follow, no verification commands, no TDD steps. Plain English only, one screen max. Use this shape:
+The Phase 5 summary is presented **inline in the conversation**, for the *human*, not the implementer. Strip everything an engineer needs but a decision-maker doesn't: no file:line pointers, no patterns-to-follow, no verification commands, no TDD steps. Plain English only, one screen max. Use this shape:
 
 ```markdown
 # [Feature Name] — Plan Summary
@@ -163,7 +162,7 @@ The `<feature-name>-summary.md` file (Phase 5) is for the *human*, not the imple
 **How we'll know it works:** [1-2 sentences on overall verification — the user-visible proof, not the test commands]
 ```
 
-The summary is written and approved *before* the detailed task division (Phase 6), so its steps are the high-level steps of the work — the Phase 6 task breakdown maps onto these (one task per step, or a step split into a few committable tasks), never contradicts them. If there were no notable decisions or risks, write "None — straightforward implementation." rather than padding.
+The summary is presented and approved *before* the detailed task division (Phase 6), so its steps are the high-level steps of the work — the Phase 6 task breakdown maps onto these (one task per step, or a step split into a few committable tasks), never contradicts them. If there were no notable decisions or risks, write "None — straightforward implementation." rather than padding.
 
 ### Task Structure
 
