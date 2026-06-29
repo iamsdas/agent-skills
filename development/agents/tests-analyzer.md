@@ -1,7 +1,7 @@
 ---
 name: tests-analyzer
 description: Analyzes test coverage quality and completeness for a feature, code path, PR, or bug investigation. Use to identify critical gaps, brittle tests, missing edge cases, and untested error paths.
-tools: Glob, Grep, LS, Read, NotebookRead, WebFetch, TodoWrite, WebSearch, BashOutput, LSP
+tools: Glob, Grep, LS, Read, NotebookRead, WebFetch, TodoWrite, WebSearch, BashOutput, LSP, ToolSearch, mcp__plugin_context-mode_context-mode__*
 model: sonnet
 color: cyan
 effort: low

@@ -1,7 +1,7 @@
 ---
 name: comment-analyzer
 description: Analyzes code comments for accuracy, completeness, and long-term maintainability. Use when comments may be stale, misleading, redundant, or missing for non-obvious code.
-tools: Glob, Grep, LS, Read, NotebookRead, WebFetch, TodoWrite, WebSearch, BashOutput, LSP
+tools: Glob, Grep, LS, Read, NotebookRead, WebFetch, TodoWrite, WebSearch, BashOutput, LSP, ToolSearch, mcp__plugin_context-mode_context-mode__*
 model: sonnet
 color: orange
 ---

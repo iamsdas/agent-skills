@@ -1,7 +1,7 @@
 ---
 name: silent-failure-hunter
 description: Identifies silent failures, inadequate error handling, and inappropriate fallback behavior in code changes. Use when reviewing a PR or a chunk of work that involves error handling, catch blocks, fallback logic, or anything that could suppress errors.
-tools: Glob, Grep, LS, Read, NotebookRead, WebFetch, TodoWrite, WebSearch, BashOutput, LSP
+tools: Glob, Grep, LS, Read, NotebookRead, WebFetch, TodoWrite, WebSearch, BashOutput, LSP, ToolSearch, mcp__plugin_context-mode_context-mode__*
 model: sonnet
 color: purple
 effort: low

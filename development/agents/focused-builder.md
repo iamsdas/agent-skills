@@ -1,7 +1,7 @@
 ---
 name: focused-builder
 description: Implements a single, well-scoped task from a plan — writes code, follows TDD, commits, self-reviews, and reports status. Use when a task is clearly defined with explicit acceptance criteria and no architectural ambiguity.
-tools: Glob, Grep, LS, Read, Write, Edit, NotebookRead, NotebookEdit, WebFetch, TodoWrite, WebSearch, Bash, KillShell, BashOutput, LSP
+tools: Glob, Grep, LS, Read, Write, Edit, NotebookRead, NotebookEdit, WebFetch, TodoWrite, WebSearch, Bash, KillShell, BashOutput, LSP, ToolSearch, mcp__plugin_context-mode_context-mode__*
 model: opus
 color: blue
 effort: low

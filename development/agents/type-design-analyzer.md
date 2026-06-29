@@ -1,7 +1,7 @@
 ---
 name: type-design-analyzer
 description: Analyzes type design for invariant strength, encapsulation, and usefulness, giving both qualitative feedback and quantitative ratings. Use when introducing a new type, reviewing types added in a PR, or refactoring existing types to improve their design quality.
-tools: Glob, Grep, LS, Read, NotebookRead, WebFetch, TodoWrite, WebSearch, BashOutput, LSP
+tools: Glob, Grep, LS, Read, NotebookRead, WebFetch, TodoWrite, WebSearch, BashOutput, LSP, ToolSearch, mcp__plugin_context-mode_context-mode__*
 model: sonnet
 color: pink
 effort: low

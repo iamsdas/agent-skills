@@ -1,7 +1,7 @@
 ---
 name: code-simplifier
 description: Simplifies recently written or modified code for clarity, consistency, and maintainability while preserving all functionality. Use after completing a coding task or a logical chunk of code, or when asked to refine an implementation.
-tools: Glob, Grep, LS, Read, Write, Edit, NotebookRead, NotebookEdit, WebFetch, TodoWrite, WebSearch, Bash, BashOutput, LSP
+tools: Glob, Grep, LS, Read, Write, Edit, NotebookRead, NotebookEdit, WebFetch, TodoWrite, WebSearch, Bash, BashOutput, LSP, ToolSearch, mcp__plugin_context-mode_context-mode__*
 model: sonnet
 color: blue
 effort: high
