@@ -7,13 +7,13 @@ description: Use when you have a written implementation plan to execute in a sep
 
 ## Overview
 
-Load plan, review critically, execute all tasks directly in this session, then run hands-off to an opened PR and review — pausing only before final integration. This is the **default** execution path after a plan is approved.
+Load plan, review critically, execute all tasks directly in this session, then run hands-off to an opened PR and review — pausing only before final integration. This is the **fallback** execution path: the default after a plan is approved is `subagent-driven-development`. Use this skill for a plan small enough that inline churn is cheap, or when the user explicitly asks to run it inline.
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
 **Hands-off by default.** Once the plan is approved, the user does not want to babysit execution. Run all tasks without check-ins, then open a PR and run review automatically. Stop only on a true blocker (see "When to Stop and Ask") or at the single intended pause: after the PR is open and reviewed, before the work is merged/landed.
 
-**This is the default — not subagents.** Execute the plan's tasks yourself in this session. Only reach for `subagent-driven-development` instead when the user explicitly opts into it for a large, mostly-independent task set; do not fan out to a subagent per task unasked.
+**This is the fallback — subagents are the default.** When you're in this skill, execute the plan's tasks yourself in this session. Reach back for `subagent-driven-development` (the default handoff from `writing-plans`) when the plan is large or its churn would bloat this session; `executing-plans` is for the small-plan / explicit-inline case.
 
 ## The Process
 

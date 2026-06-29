@@ -7,7 +7,7 @@ description: Use when executing implementation plans with independent tasks in t
 
 Execute a plan with subagents while paying the codebase-discovery cost **once** and keeping the working churn **off your own context**. One orientation pass indexes the codebase into a shared knowledge base, then a persistent implementer + reviewer pair per coherent stage is fed one task at a time, each querying the KB for only the slice it needs.
 
-**This is opt-in, not the default.** The default post-plan execution path is `executing-plans` (direct in-session, no subagents). Use this skill when the user explicitly asks for subagent-driven execution — typically a plan large enough that doing the work inline would bloat this session's context, yet where you still want isolation between unrelated chunks of work. If the user didn't ask for subagents, use `executing-plans`.
+**This is the default post-plan execution path.** `writing-plans` hands off here by default. Use it for any plan with mostly-independent tasks where you want discovery paid once and the working churn kept off this session's context. Fall back to `executing-plans` (direct in-session, no subagents) only for a plan small enough that inline churn is cheap, or when the user explicitly asks to run it inline.
 
 **Why this shape (the middleground):** Fresh-subagent-per-task wastes tokens because every implementer *and* every reviewer boots cold and re-discovers the same code; isolation also makes a stuck subagent expensive to rescue (cold re-dispatch). Doing everything inline avoids re-discovery but dumps all the churn into the session that persists, so every later turn re-sends it. This skill sits between them: a one-time **orientation pass** indexes the codebase into the context-mode KB so no worker re-discovers it, and a **persistent worker per stage** (continued via `SendMessage`) keeps a warm context that lives on the *agent* side, never in yours.
 
@@ -36,8 +36,8 @@ digraph when_to_use {
     "Have implementation plan?" -> "Manual execution or brainstorm first" [label="no"];
     "Tasks mostly independent?" -> "Inline churn would bloat this session?" [label="yes"];
     "Tasks mostly independent?" -> "Manual execution or brainstorm first" [label="no - tightly coupled"];
-    "Inline churn would bloat this session?" -> "subagent-driven-development" [label="yes, + user opted in"];
-    "Inline churn would bloat this session?" -> "executing-plans" [label="no - just run it inline"];
+    "Inline churn would bloat this session?" -> "subagent-driven-development" [label="yes (default)"];
+    "Inline churn would bloat this session?" -> "executing-plans" [label="no - small plan, run it inline"];
 }
 ```
 
@@ -99,7 +99,9 @@ A **stage** is a small group of tasks that share context — same subsystem, sam
 
 Pick a distinctive **KB source label** for this run, e.g. `orient:<feature-slug>`. Every later `ctx_search` scopes to it so other runs' content doesn't bleed in.
 
-Dispatch **one** orientation agent (`development:code-explorer`, using `./orientation-prompt.md`). It explores the areas the plan touches and `ctx_index`es three things under that label: (1) the relevant codebase paths, (2) the full plan text, (3) a concise architecture + conventions overview it writes as indexed content. No flat orientation file is produced — discovery lives in the KB, queryable per-slice, so a worker reads only what its task needs instead of a whole document. `code-explorer` is the right agent: it's the specialist explorer and now carries `ctx_index`/`ctx_search`; it needs no `Write`.
+**Reuse a label from planning if one exists.** If `writing-plans` already explored this codebase, its plan header carries a `KB source label` and the code is already `ctx_index`ed under it. Use that same label — do **not** re-index the codebase. Dispatch the orientation agent only to add what planning didn't: `ctx_index` the full plan text and a concise architecture/conventions overview under the existing label, then return. This is the whole point of the bridge — discovery was paid at planning time. (If the plan is old enough that the code may have drifted, have the agent spot-check a few indexed anchors with `ctx_search` and re-index only what's stale.)
+
+Otherwise (no planning label), dispatch **one** orientation agent (`development:code-explorer`, using `./orientation-prompt.md`). It explores the areas the plan touches and `ctx_index`es three things under the label: (1) the relevant codebase paths, (2) the full plan text, (3) a concise architecture + conventions overview it writes as indexed content. No flat orientation file is produced — discovery lives in the KB, queryable per-slice, so a worker reads only what its task needs instead of a whole document. `code-explorer` is the right agent: it's the specialist explorer and carries `ctx_index`/`ctx_search`; it needs no `Write`.
 
 You do **not** read the indexed content into your own context — you only carry forward the source label and hand it to every worker. Skip this pass only for a plan small enough that a single stage covers it.
 
@@ -221,4 +223,4 @@ After the final stage's review passes, complete hands-off — same as `executing
 - **context-mode** - Workers `ctx_index`/`ctx_search` the shared KB and process heavy output in-sandbox via `ctx_execute`
 
 **Alternative workflow:**
-- **executing-plans** - The default; use for small plans where inline churn is cheap
+- **executing-plans** - The fallback; use for small plans where inline churn is cheap, or when the user asks to run inline

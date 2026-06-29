@@ -23,7 +23,7 @@ The plan's job is to transfer *decisions and pointers*, not to be an instruction
 - **Task tracking:** Before starting, create one task per phase using TaskCreate. Mark each task `in_progress` when beginning it, `completed` when done. This renders a live-updating checklist for the user. These tasks are scaffolding for this skill only — when the skill ends (the Phase 7 handoff, or planning abandoned mid-way), delete every task it created via TaskUpdate with status `deleted`, so the checklist doesn't linger and absorb later, unrelated work.
 - **Sequential:** Run phases in order. Each must complete before the next begins.
 - **Two routes — decide in Phase 1.** Don't fan out by default. The full multi-agent path (Phases 2–4) is for large or unfamiliar work; for small, well-understood changes take the **fast path** (one combined pass). Phase 1 does the scope read and picks the route itself — it does not stop to ask. Over-provisioning agents on a localized change is the main reason planning feels slow.
-- **Never execute the plan yourself.** This skill *writes* the plan; it does not build. Once the plan is written, hand off to the `executing-plans` skill (Phase 7) — do not start editing files, writing tests, or running the plan's steps in this conversation.
+- **Never execute the plan yourself.** This skill *writes* the plan; it does not build. Once the plan is written, hand off to the `subagent-driven-development` skill (Phase 7) — do not start editing files, writing tests, or running the plan's steps in this conversation.
 
 ---
 
@@ -55,7 +55,9 @@ Scale the agent count to the route — do not fan out wider than the task needs.
 
 **Thorough path:** Launch **2-3** development:code-explorer agents in parallel, each targeting a different aspect (e.g. similar features, high-level architecture, control flow), each reading 5-10 key files and tracing abstractions end-to-end. One explorer MUST do the parallel-implementation/call-site enumeration above.
 
-**Output:** Summary of existing patterns and architecture relevant to this task, including every parallel implementation or sibling call site that must change in lockstep (file:line each).
+**Seed the KB for execution (when an explorer agent runs).** Pick the run's KB source label now — `orient:<feature-name>` (same kebab-case slug used for the plan files) — and tell each `code-explorer` to `ctx_index` the code it explores under that label (it carries `ctx_index`/`ctx_search`; it loads the deferred schema once via `ToolSearch`). The default executor, `subagent-driven-development`, reuses this label so it does **not** re-explore the codebase from scratch — discovery is paid once, here. Record the label in the plan header so the handoff can pass it on. If you explored by reading files yourself (no agent dispatched), skip seeding — there's no label to pass, and execution will do its own orientation.
+
+**Output:** Summary of existing patterns and architecture relevant to this task, the KB source label (if one was seeded), and every parallel implementation or sibling call site that must change in lockstep (file:line each).
 
 ---
 
@@ -113,11 +115,11 @@ Scale the agent count to the route — do not fan out wider than the task needs.
 
 1. **Check for a systemic planning gap.** If review or the user's refinement exposed a *systemic* gap — a class of case the plan dropped that the planning process should have surfaced (e.g. "we keep missing concurrency") — invoke the `preventing-recurrence` sub-skill before handing off. Tell it the gap was caught *at planning*, so the fix lands in the planning machinery (this skill or the plan reviewer prompt), not downstream.
 2. **Clean up the phase checklist.** Delete every phase-tracking task this skill created (TaskUpdate with status `deleted`). The checklist was scaffolding for planning; leaving it alive makes every subsequent task in the session pile into it.
-3. **Then hand off execution.** By default, invoke the `executing-plans` skill — it executes the plan directly in this session and runs hands-off through to an opened PR and review. Only invoke `subagent-driven-development` instead when the user explicitly opts into it (large, mostly-independent task sets where fresh-subagent-per-task isolation is worth the overhead). Default to `executing-plans`; do not fan out to subagents unasked.
+3. **Then hand off execution.** By default, invoke the `subagent-driven-development` skill — it runs a persistent implementer+reviewer pair per stage, keeping the plan's churn off this session's context while running hands-off through to an opened PR and review. **If Phase 2 seeded a KB label, hand it that label** so it reuses the already-indexed code instead of re-exploring (its orientation pass then only adds the plan text + conventions overview). Fall back to `executing-plans` (direct in-session execution) only for a plan small enough that inline churn is cheap, or when the user explicitly asks to run it inline.
 
-**Output:** Execution begins under `executing-plans` (or `subagent-driven-development` if explicitly opted into), not under this skill.
+**Output:** Execution begins under `subagent-driven-development` (or `executing-plans` for a small plan / explicit inline request), not under this skill.
 
-**Red flag — STOP if you catch yourself:** opening a file to edit, writing a test, or running a plan step right after the plan file is written. That means you skipped the handoff. Invoke `executing-plans` instead.
+**Red flag — STOP if you catch yourself:** opening a file to edit, writing a test, or running a plan step right after the plan file is written. That means you skipped the handoff. Invoke `subagent-driven-development` instead.
 
 ---
 
@@ -133,6 +135,8 @@ Every plan MUST start with this header:
 **Goal:** [One sentence describing what this builds]
 
 **Approach:** [2-3 sentences about approach]
+
+**KB source label:** `orient:<feature-name>` — *(omit this line if Phase 2 seeded no KB; the executor will orient itself)*
 
 ---
 ```
