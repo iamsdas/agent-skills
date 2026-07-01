@@ -88,7 +88,7 @@ Scale the agent count to the route — do not fan out wider than the task needs.
 **Task:**
 
 1. Present the concise human-readable summary **inline in the conversation** — do not write it to a file or open it with `SendUserFile`. See **Human Summary** under Output Format for its shape; keep it to one screen.
-2. Ask for approval of the summary (`AskUserQuestion`, or present and wait). If they want changes, revise and re-present inline. Do not proceed to the task breakdown until the summary is approved.
+2. Ask for approval of the summary using the `AskUserQuestion` widget — **always the widget, never a plain-text question the user has to notice and type a reply to.** A text question reads like the agent is still working and gets missed; the widget forces an explicit, unmissable choice. Ask one question (header e.g. "Approve plan?") with options like "Approve — proceed to task breakdown" and "Request changes" (the user can pick "Other" to type specifics). If they request changes, revise and re-present the summary inline, then ask again with the widget. Do not proceed to the task breakdown until the summary is approved via the widget.
 
 **Output:** An approved inline summary. This is the WHAT/HOW the user signed off on; the detailed task breakdown in Phase 6 must not deviate from it.
 
