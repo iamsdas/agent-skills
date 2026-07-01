@@ -8,16 +8,17 @@ disable-model-invocation: true
 
 ## Instructions
 
-Spawn all subagents defined below in a single message so they run concurrently. Collect all results, then synthesize the final review. If a PR exists, pass PR title/body/discussion into relevant subagents. If no PR exists, proceed with branch-only review and note that limitation in the summary.
+Spawn all subagents defined below in a single message so they run concurrently. Collect all results, run the **Verification** pass to refute false positives, then synthesize the final review. If a PR exists, pass PR title/body/discussion into relevant subagents. If no PR exists, proceed with branch-only review and note that limitation in the summary.
 
 ## Execution Rules
 
 - **Subagent types:** For every subagent that has a `subagent_type` field, you MUST pass that exact value as the `subagent_type` parameter to the Agent tool. Never spawn a general-purpose agent when a `subagent_type` is specified — this is a correctness requirement.
 - **Model parameter:** Named agents (`subagent_type` specified) define their own model — do not pass a `model` parameter. General-purpose agents (no `subagent_type`) MUST have an explicit `model` parameter. Omitting model on a general-purpose call is a bug.
-- **Task tracking:** Before spawning any subagent, create one task per **applicable** subagent (after triage) using TaskCreate. Mark all tasks `in_progress` when spawning. As each background agent returns, mark its task `completed`. This renders a live-updating checklist in the UI. These tasks are scaffolding for this skill only — once the final review is delivered (or the review is abandoned), delete every task it created via TaskUpdate with status `deleted`, so the checklist doesn't linger and absorb later, unrelated work.
+- **Task tracking:** Before spawning any subagent, create one task per **applicable** subagent (after triage) using TaskCreate, plus one `verification` task for the refute pass. Mark all finder tasks `in_progress` when spawning. As each background agent returns, mark its task `completed`. This renders a live-updating checklist in the UI. These tasks are scaffolding for this skill only — once the final review is delivered (or the review is abandoned), delete every task it created via TaskUpdate with status `deleted`, so the checklist doesn't linger and absorb later, unrelated work.
 - **Parallelism:** Spawn ALL subagents in a single message. Do NOT wait for one to finish before launching the next. Use `run_in_background: true` for every subagent.
 - **Triage (before spawning):** Collect `CHANGED_FILES` and `DIFF_CONTENT` via `git diff` (see Triage section below). Evaluate the rule table to determine which subagents to spawn. Then spawn only the applicable set — all in a single message with `run_in_background: true`.
-- **Output suppression:** Write `Running deep review…` before spawning (after triage is complete), then optionally a skipped-subagents note if applicable (see Triage section). Write nothing else until all subagents have returned.
+- **Two waves:** The finder subagents are wave one. After they all return, run the **Verification** wave (see below) — one adversarial verifier per qualifying finding, again all in a single message with `run_in_background: true`. Synthesis happens only after the verification wave returns.
+- **Output suppression:** Write `Running deep review…` before spawning (after triage is complete), then optionally a skipped-subagents note if applicable (see Triage section). Write nothing else until the finder wave AND the verification wave have both returned.
 - **Final output:** Prioritize findings by severity with concrete file/symbol references. You (the orchestrator) are the final authority on severity — apply the **Severity Rubric** below to every finding during synthesis, downgrading subagent-proposed severities wherever a cap applies. Subagents propose; you decide.
 
 ## Triage
@@ -152,6 +153,29 @@ If a subagent cannot determine an attribute with evidence, it must say so and ma
 
 ---
 
+## Verification
+
+After every finder subagent returns and **before** synthesis, run an adversarial verification pass. Its purpose is to **kill false positives**: each verifier tries to *refute* its finding, not confirm it. An unrefuted finding earns its place in the report; a refuted one is dropped. This is deep-review's precision mechanism — finders optimize for recall, verification claws back precision.
+
+**What to verify.** Every finding tagged `kind: bug` (any severity), plus every finding proposed at `[medium]` or above. Skip only `kind: suggestion` findings capped at `[low]` (style, naming, preference — there is no truth-value to refute).
+
+**How.** Spawn one verifier per qualifying finding, **all in a single message** with `run_in_background: true` (same discipline as the finder wave). Each verifier is a general-purpose agent — no `subagent_type`, so it MUST be passed an explicit `model: sonnet` (per the Execution Rules). Give it **only** the finding: the claim, `file:line`, proposed severity, and the finder's stated reasoning/evidence. The finder's reasoning is a claim to be tested, **not** trusted. Instruct each verifier to:
+
+- Independently open the cited code and the diff — pass it the resolved base SHA in its prompt (the `BASE_COMMIT` from Triage), or have it recompute `git merge-base HEAD origin/${BASE_BRANCH:-main}` itself, then `git diff <base>..HEAD` — and try to prove the finding **wrong**: Is the flagged code actually reached on the described path? Is it actually incorrect? Was it actually `introduced` by this diff (vs. `pre-existing`)? Look for the guard, prior validation, caller contract, or existing test the finder may have missed.
+- Fact-check any external-artifact non-existence claim online (per the rule above) before accepting it — a "version/package/API does not exist" claim with no cited verification URL is refuted by default.
+- Return a verdict with concrete evidence (`file:line` or URL):
+  - **`CONFIRMED`** — the code concretely exhibits the problem; cite the proof.
+  - **`REFUTED`** — the code does not exhibit it (a guard exists, the path is unreachable, the claim rests on a misread, or the artifact exists); cite what disproves it.
+  - **`UNCERTAIN`** — cannot determine from available evidence.
+
+**Applying verdicts at synthesis:**
+
+- **`REFUTED` → drop.** Do not report the finding. Tally the drop count for the Summary.
+- **`CONFIRMED` → keep** and apply the Severity Rubric normally.
+- **`UNCERTAIN` → keep but treat as `unverified`:** capped at `[medium]` and labeled `(unverified)` per rubric cap 5.
+
+Findings never eligible for verification (`[low]` suggestions) carry through unchanged.
+
 ## Severity Rubric
 
 Apply this during synthesis to **every** finding. Subagents propose a severity; you normalize it here. When multiple caps apply, take the **lowest** resulting severity.
@@ -228,6 +252,8 @@ When you downgrade a finding via a cap, keep it in the report at its capped seve
 
 - <key finding or required action 1>
 - <key finding or required action 2>
+
+<If the verification pass refuted any findings, add one line: "Verification refuted and dropped N candidate finding(s)." Omit if none were dropped.>
 ```
 
 ## Quality Bar
