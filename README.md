@@ -22,19 +22,21 @@ writing-plans           →  turn the agreed scope into a single self-contained 
                            (lean, runs on Fable). You open it in a browser and approve.
                            The HTML is both the approval artifact and the builder's spec.
         ↓
-using-git-worktrees     →  carve out an isolated workspace for the work
+building-with-subagent  →  isolate the workspace (worktree/branch), then hand the
+                           approved HTML plan to ONE Opus builder subagent that builds
+                           everything, then runs /code-review, then pauses
         ↓
-executing-plans         →  hand the approved HTML plan to ONE Opus builder subagent that
-                           builds everything, then runs /code-review, then pauses
-        ↓
-   (executing-plans runs these automatically, hands-off, then pauses):
-   creating-pull-requests →  push branch + open PR (summary, mermaid visuals, usage, test plan)
+   (building-with-subagent runs these automatically, hands-off, then pauses):
+   creating-pull-requests →  push branch + open PR (summary, visuals — screenshot for UI
+                             features / mermaid for architecture — usage, test plan)
    /code-review           →  inbuilt pre-merge review of the diff
         ↓  ── PAUSE: you review the open PR and decide how to land it ──
 finishing-a-development-branch → only when you explicitly choose: local merge, or discard/cleanup
 ```
 
-> **One approval, then hands-off** — the single human checkpoint is approving the HTML plan in `writing-plans`. After that, everything runs without check-ins: `executing-plans` hands the plan to one Opus builder subagent, which builds all tasks, opens a PR, and runs the inbuilt `/code-review`, then **pauses** with the PR link and findings. It never merges on its own. The interactive merge/discard menu in `finishing-a-development-branch` only appears if you ask for it after the pause.
+> **One approval, then hands-off** — the single human checkpoint is approving the HTML plan in `writing-plans`. After that, everything runs without check-ins: `building-with-subagent` isolates the workspace, hands the plan to one Opus builder subagent, which builds all tasks, opens a PR, and runs the inbuilt `/code-review`, then **pauses** with the PR link and findings. It never merges on its own. The interactive merge/discard menu in `finishing-a-development-branch` only appears if you ask for it after the pause.
+>
+> `building-with-subagent` is generic — it also builds directly from a written spec or a clear ad-hoc task, not just a `writing-plans` HTML plan.
 
 ### Fixing a bug
 

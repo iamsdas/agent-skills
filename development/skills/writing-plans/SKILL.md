@@ -7,13 +7,13 @@ description: Use when you have a clear spec or requirements for a multi-step cod
 
 ## Overview
 
-Produce **one self-contained HTML file** that is both the human's approval artifact and the complete spec handed to the builder. The human opens it in a browser, sees the plan laid out with clear visualizations, and approves. The builder (a single Opus subagent, dispatched by `executing-plans`) reads the same file and builds everything from it. One artifact, one approval, one handoff.
+Produce **one self-contained HTML file** that is both the human's approval artifact and the complete spec handed to the builder. The human opens it in a browser, sees the plan laid out with clear visualizations, and approves. The builder (a single Opus subagent, dispatched by `building-with-subagent`) reads the same file and builds everything from it. One artifact, one approval, one handoff.
 
 This skill is deliberately lean — it is light enough to run on Fable. Plan directly: read the change site, trace the patterns, write the HTML. There is no architecture tournament, no multi-agent exploration pass, no separate markdown doc. If you catch yourself provisioning subagents to plan a localized change, stop.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Never build here.** This skill writes the plan and stops. Once the human approves, hand off to `executing-plans` — do not start editing files, writing tests, or running steps in this conversation.
+**Never build here.** This skill writes the plan and stops. Once the human approves, hand off to `building-with-subagent` — do not start editing files, writing tests, or running steps in this conversation.
 
 ## Planning Discipline
 
@@ -31,9 +31,9 @@ This skill is deliberately lean — it is light enough to run on Fable. Plan dir
 2. **Write the HTML plan** to `<feature-name>-plan.html` (kebab-case). Default location: the project's plans directory if one exists, else the scratchpad directory. See **HTML Plan** for its contents.
 3. **Get approval.** Present the file path and open/point the user to it. Ask for approval using the `AskUserQuestion` widget — always the widget, never a plain-text question the user has to notice and reply to. One question ("Approve plan?") with options like "Approve — proceed to build" and "Request changes" (they can pick "Other" to type specifics). If they request changes, revise the HTML and ask again. Do not hand off until approved via the widget.
 4. **Check for a systemic planning gap.** If refinement exposed a *class* of case the plan dropped that planning should have caught (e.g. "we keep missing concurrency"), invoke the `preventing-recurrence` sub-skill and tell it the gap was caught *at planning*, so the fix lands in the planning machinery.
-5. **Hand off.** Invoke the `executing-plans` skill, passing the plan file path. Do not build here.
+5. **Hand off.** Invoke the `building-with-subagent` skill, passing the plan file path. Do not build here.
 
-**Red flag — STOP if you catch yourself:** opening a file to edit, writing a test, or running a plan step right after the plan is approved. That means you skipped the handoff. Invoke `executing-plans` instead.
+**Red flag — STOP if you catch yourself:** opening a file to edit, writing a test, or running a plan step right after the plan is approved. That means you skipped the handoff. Invoke `building-with-subagent` instead.
 
 ## HTML Plan
 
