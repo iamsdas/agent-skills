@@ -18,24 +18,23 @@ Skills are designed to chain. Two canonical flows:
 ```
 scope-requirements      →  agree on WHAT and WHY (product intent, no implementation)
         ↓
-writing-plans           →  turn the agreed scope into a plan. You approve a concise
-                           human-readable summary FIRST; plan mode then divides the
-                           approved plan into small committable tasks for the agent
+writing-plans           →  turn the agreed scope into a single self-contained HTML plan
+                           (lean, runs on Fable). You open it in a browser and approve.
+                           The HTML is both the approval artifact and the builder's spec.
         ↓
 using-git-worktrees     →  carve out an isolated workspace for the work
         ↓
-executing-plans         →  DEFAULT: execute the plan directly in this session, hands-off
-   (opt-in)                 — runs to an opened PR + review, then pauses before merge
-subagent-driven-development →  opt-in: execute mostly-independent tasks via a subagent per task
+executing-plans         →  hand the approved HTML plan to ONE Opus builder subagent that
+                           builds everything, then runs /code-review, then pauses
         ↓
-   (the execution skill runs these automatically, hands-off, then pauses):
+   (executing-plans runs these automatically, hands-off, then pauses):
    creating-pull-requests →  push branch + open PR (summary, mermaid visuals, usage, test plan)
-   deep-review            →  pre-merge review (breaking changes, migrations, coverage)
+   /code-review           →  inbuilt pre-merge review of the diff
         ↓  ── PAUSE: you review the open PR and decide how to land it ──
 finishing-a-development-branch → only when you explicitly choose: local merge, or discard/cleanup
 ```
 
-> **One approval, then hands-off** — the single human checkpoint is approving the concise summary in `writing-plans` (before plan mode). After that, everything runs without check-ins: plan mode divides the work into committable tasks, then `executing-plans` runs all tasks, opens a PR, runs `deep-review`, and **pauses** with the PR link and findings. It never merges on its own. `executing-plans` (direct, in-session) is the default; `subagent-driven-development` is opt-in for large independent task sets. The interactive merge/discard menu in `finishing-a-development-branch` only appears if you ask for it after the pause.
+> **One approval, then hands-off** — the single human checkpoint is approving the HTML plan in `writing-plans`. After that, everything runs without check-ins: `executing-plans` hands the plan to one Opus builder subagent, which builds all tasks, opens a PR, and runs the inbuilt `/code-review`, then **pauses** with the PR link and findings. It never merges on its own. The interactive merge/discard menu in `finishing-a-development-branch` only appears if you ask for it after the pause.
 
 ### Fixing a bug
 
@@ -46,24 +45,23 @@ investigate             →  diagnose: end-user impact, exact root cause, missin
         ↓
 writing-plans / test-driven-development → plan and fix
         ↓
-requesting-code-review → deep-review → finishing-a-development-branch
+requesting-code-review → /code-review → finishing-a-development-branch
 ```
 
 > **scope-requirements vs. investigate** — `investigate` looks *backward* (why is it broken?) and is the right entry point for a bug or error. `scope-requirements` looks *forward* (what should change?) and assumes you already know the desired behavior. For a bug, start with `investigate`; only reach for `scope-requirements` afterward if the fix involves real product decisions.
 
-> **preventing-recurrence (cross-cutting)** — not a phase but an *event handler*. Whenever a real defect or missing-logic gap is caught — during `writing-plans` refinement, `deep-review`, `receiving-code-review`, or `investigate` — those skills invoke `preventing-recurrence` to route the lesson into a durable mechanism (hook, skill/reviewer edit, project instruction, or memory) so the same class is caught automatically next time. It biases the fix toward the *earliest* point that could have caught the defect.
+> **preventing-recurrence (cross-cutting)** — not a phase but an *event handler*. Whenever a real defect or missing-logic gap is caught — during `writing-plans` refinement, `/code-review`, `receiving-code-review`, or `investigate` — those skills invoke `preventing-recurrence` to route the lesson into a durable mechanism (hook, skill/reviewer edit, project instruction, or memory) so the same class is caught automatically next time. It biases the fix toward the *earliest* point that could have caught the defect.
 
 ---
 
 ## Subagents (always passive)
 
-Subagents in `development/agents/` are **never invoked directly by you** — skills and Claude dispatch them in the background (often in parallel) to do focused, context-isolated work. You'll see them referenced from within skills like `investigate`, `deep-review`, `writing-plans`, and `scope-requirements`.
+Subagents in `development/agents/` are **never invoked directly by you** — skills and Claude dispatch them in the background (often in parallel) to do focused, context-isolated work. You'll see them referenced from within skills like `investigate`, `writing-plans`, and `scope-requirements`.
 
 | Agent | Dispatched to… |
 |-------|----------------|
 | **code-explorer** | Trace execution paths and map architecture to understand existing behavior. |
 | **code-architect** | Design a feature's architecture and produce an implementation blueprint. |
-| **focused-builder** | Implement a single well-scoped task (writes code, TDD, commits, self-reviews). |
 | **code-reviewer** | Review code for bugs, logic errors, security, and convention adherence. |
 | **code-simplifier** | Simplify recently written code for clarity without changing behavior. |
 | **tests-analyzer** | Assess test coverage quality and identify gaps / missing tests. |

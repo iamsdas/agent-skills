@@ -1,6 +1,6 @@
 ---
 name: preventing-recurrence
-description: Use when a bug, defect, missing-logic gap, or design omission was just caught — in code review, deep-review, plan refinement, or investigation — and you want to ensure that class of mistake does not recur. Covers routing the lesson to a hook, skill/reviewer edit, project instruction, or memory.
+description: Use when a bug, defect, missing-logic gap, or design omission was just caught — in code review, plan refinement, or investigation — and you want to ensure that class of mistake does not recur. Covers routing the lesson to a hook, skill/reviewer edit, project instruction, or memory.
 ---
 
 # Preventing Recurrence
@@ -15,7 +15,7 @@ When something slips through and gets caught, fixing the instance is not enough 
 
 ## When to Use
 
-- A reviewer (human or `deep-review`) found a bug that was introduced and slipped past build.
+- A reviewer (human or `/code-review`) found a bug that was introduced and slipped past build.
 - Plan refinement exposed a missing case the planning process should have surfaced.
 - `investigate` found a shipped bug with no test that should have caught it.
 - Your partner says "make sure this never happens again" / "we keep missing X."
@@ -83,8 +83,8 @@ Install the mechanism at the **earliest** point that could have caught the defec
 
 | Caught during | Push the mechanism into |
 |---|---|
-| Planning / plan refinement | the planning machinery: `writing-plans` / `scope-requirements` + the plan reviewer prompt |
-| Code review / `deep-review` | one phase up — build/TDD discipline, or a `deep-review` lane/subagent that catches it next time; **+ a hook if mechanical** |
+| Planning / plan refinement | the planning machinery: `writing-plans` / `scope-requirements` |
+| Code review / `/code-review` | one phase up — build/TDD discipline, or a `/code-review` pass/subagent that catches it next time; **+ a hook if mechanical** |
 | Receiving external feedback | same as review, and confirm the reviewer actually had context |
 | `investigate` (shipped bug) | the missing test + earliest detection (already core to `investigate`) |
 

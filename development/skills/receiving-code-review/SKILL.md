@@ -193,7 +193,7 @@ When a finding turns out to be a real bug or missing-logic gap — not just this
 
 This is a separate axis from the `writing-plans` handoff: the plan addresses *this* instance, while `preventing-recurrence` guards against the whole *class*. Do both.
 
-**REQUIRED SUB-SKILL:** Invoke `preventing-recurrence` to route the lesson into a durable mechanism (a hook, a skill/reviewer edit, a project instruction, or memory) so the same class is caught automatically next time. Tell it the defect was caught *at review* — that biases the fix one phase upstream (build/TDD, or a `deep-review` lane).
+**REQUIRED SUB-SKILL:** Invoke `preventing-recurrence` to route the lesson into a durable mechanism (a hook, a skill/reviewer edit, a project instruction, or memory) so the same class is caught automatically next time. Tell it the defect was caught *at review* — that biases the fix one phase upstream (build/TDD, or a `/code-review` pass).
 
 ## The Bottom Line
 

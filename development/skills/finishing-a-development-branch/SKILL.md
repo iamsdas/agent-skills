@@ -100,7 +100,7 @@ Evaluate the already-collected `CHANGED_FILES` and `DIFF_CONTENT` against these 
 **Render findings** above the options menu once all spawned agents return:
 
 - Intermix all findings sorted by severity: `[CRITICAL]` → `[HIGH]` → `[parallel]` → `[gap:9+]` → `[gap:7-8]` → `[comment]`
-- Cap at 6 items total; if more: `(+N more — run /deep-review for full report)`
+- Cap at 6 items total; if more: `(+N more — run /code-review for full report)`
 - Always close with: `These are advisory. Proceeding to options.`
 - **If no findings across all spawned agents: print nothing.** Silence means clean — no false-confidence banner.
 

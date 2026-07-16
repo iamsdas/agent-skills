@@ -1,222 +1,63 @@
 ---
 name: writing-plans
-description: Use when you have a clear spec or requirements for a multi-step coding task, and the user wants to plan out the final implementation details.
+description: Use when you have a clear spec or requirements for a multi-step coding task, and the user wants to plan out the final implementation details before building.
 ---
 
 # Writing Plans
 
 ## Overview
 
-Write implementation plans for a capable engineer who can read code, follow established patterns, and fill in routine details on their own — but who starts with zero context for our codebase and its decisions. Document what they can't infer from the code: which files to touch for each task, the pattern to follow and where it lives, project-specific gotchas, parallel implementations that must change in lockstep, and how to verify the work. Don't spell out what a competent engineer would do anyway. DRY. YAGNI. TDD. Commit per task.
+Produce **one self-contained HTML file** that is both the human's approval artifact and the complete spec handed to the builder. The human opens it in a browser, sees the plan laid out with clear visualizations, and approves. The builder (a single Opus subagent, dispatched by `executing-plans`) reads the same file and builds everything from it. One artifact, one approval, one handoff.
 
-The plan's job is to transfer *decisions and pointers*, not to be an instruction tape. Each task is one subagent's entire job — size it so the subagent keeps the thread and its diff reviews in one sitting, yet so it still earns its spin-up and context reload. Both directions cost you: many tiny tasks waste reloads, while one sprawling task overwhelms the subagent and produces a diff no one can review. Aim for the largest coherent slice that still reviews cleanly.
+This skill is deliberately lean — it is light enough to run on Fable. Plan directly: read the change site, trace the patterns, write the HTML. There is no architecture tournament, no multi-agent exploration pass, no separate markdown doc. If you catch yourself provisioning subagents to plan a localized change, stop.
 
-**Plan the leanest thing that works.** The plan is where over-engineering is *introduced* — the implementer just builds what you specify. So every task, abstraction, and dependency must earn its place here: does it need to exist *now*, or is it speculative ("for later")? Cut speculative scope or mark it explicitly deferred. Prefer the standard library, then native platform features, then an already-installed dependency — never plan a new dependency for what a few lines do. No abstraction with a single implementation, no config for a value that never changes, fewest files that hold the responsibilities cleanly; an abstraction earns its place only with a second concrete caller in scope. This is design discipline, not corner-cutting — never plan away input validation at trust boundaries, error handling that prevents data loss, security, or accessibility.
+**Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**No code blocks in plans.** Point to where things are instead — exact file paths and line numbers. The engineer reads the code; the plan tells them where to look and what to do. The one exception is ASCII diagrams: they communicate *structure* — control flow, architecture, schema, state — not implementation, so they're allowed and encouraged where a diagram lands faster than prose. See **Visual aids**.
+**Never build here.** This skill writes the plan and stops. Once the human approves, hand off to `executing-plans` — do not start editing files, writing tests, or running steps in this conversation.
 
----
+## Planning Discipline
 
-## Execution Rules
+**Plan the leanest thing that works.** The plan is where over-engineering is *introduced* — the builder just builds what you specify. Every task, abstraction, and dependency must earn its place: does it need to exist *now*, or is it speculative? Cut speculative scope or mark it explicitly deferred. Prefer the stdlib, then native platform features, then an already-installed dependency — never plan a new dependency for what a few lines do. No abstraction with a single caller, no config for a value that never changes, fewest files that hold the responsibilities cleanly. This is design discipline, not corner-cutting — never plan away input validation at trust boundaries, error handling that prevents data loss, security, or accessibility. DRY. YAGNI. TDD. One commit per task.
 
-- **Announce:** Write exactly one line before starting: "I'm using the writing-plans skill to create the implementation plan."
-- **Task tracking:** Before starting, create one task per phase using TaskCreate. Mark each task `in_progress` when beginning it, `completed` when done. This renders a live-updating checklist for the user. These tasks are scaffolding for this skill only — when the skill ends (the Phase 6 handoff, or planning abandoned mid-way), delete every task it created via TaskUpdate with status `deleted`, so the checklist doesn't linger and absorb later, unrelated work.
-- **Sequential:** Run phases in order. Each must complete before the next begins.
-- **Two routes — decide in Phase 1.** Don't fan out by default. The multi-agent architecture tournament (Phase 2) is for large or unfamiliar work; for small, well-understood changes take the **fast path** (skip the tournament, plan directly). Phase 1 does the scope read and picks the route itself — it does not stop to ask. Over-provisioning agents on a localized change is the main reason planning feels slow.
-- **Never execute the plan yourself.** This skill *writes* the plan; it does not build. Once the plan is written, hand off to the `subagent-driven-development` skill (Phase 6) — do not start editing files, writing tests, or running the plan's steps in this conversation.
+**Point to code, don't write it.** The plan gives exact file paths and line numbers and names the pattern to follow — the builder reads the actual code. No code blocks in the plan.
 
----
+**Enumerate every parallel implementation.** As you map files, list every duplicate/sibling call site of the code being changed — sibling handlers, the same operation for another entity or platform, copy-pasted branches (file:line each). A change that touches one must touch all of them. This completeness check is non-negotiable.
 
-## Phases
+**Split into committable tasks.** Each task is one coherent slice that ends in a passing test suite and a commit, and stays reviewable as a single diff. Split where the guidance genuinely changes (different subsystem, different pattern, a checkpoint worth reviewing) or where one task has grown too broad to review in one pass. Most plans land at 3–7 tasks; a broad feature needs more. Don't split into write-test / run-test / implement micro-steps — state the TDD expectation once.
 
-### 1. Scope Check & Route
+## Process
 
-**Task:** Two things. First, determine if the spec covers multiple independent subsystems — each plan should produce working, testable software on its own; propose a split if so. Also split on *size*, not just subsystem boundaries: if executing the whole thing would be one very long session (a dozen-plus tasks, or completed work that piles up faster than it's needed downstream), sequence it into stages that each ship something testable and get executed in a separate session. A fresh session per stage resets accumulated context instead of re-sending an ever-growing history on every turn — the single biggest driver of execution cost. Second, do a quick scope read and choose the route:
+1. **Scope read.** Determine whether the spec covers multiple independent subsystems or is large enough to sequence into separately-shippable stages; propose a split if so. Read the change site and its patterns, and enumerate parallel implementations. State the scope read to the user in 2–3 lines, then proceed — don't stop to ask.
+2. **Write the HTML plan** to `<feature-name>-plan.html` (kebab-case). Default location: the project's plans directory if one exists, else the scratchpad directory. See **HTML Plan** for its contents.
+3. **Get approval.** Present the file path and open/point the user to it. Ask for approval using the `AskUserQuestion` widget — always the widget, never a plain-text question the user has to notice and reply to. One question ("Approve plan?") with options like "Approve — proceed to build" and "Request changes" (they can pick "Other" to type specifics). If they request changes, revise the HTML and ask again. Do not hand off until approved via the widget.
+4. **Check for a systemic planning gap.** If refinement exposed a *class* of case the plan dropped that planning should have caught (e.g. "we keep missing concurrency"), invoke the `preventing-recurrence` sub-skill and tell it the gap was caught *at planning*, so the fix lands in the planning machinery.
+5. **Hand off.** Invoke the `executing-plans` skill, passing the plan file path. Do not build here.
 
-- **Which subsystem(s)** the change touches and a rough file count.
-- **Whether the approach is obvious** (clear where the code goes, an established pattern to follow, no real design fork) or has **genuine ambiguity** (multiple viable architectures, unfamiliar area, cross-cutting impact).
+**Red flag — STOP if you catch yourself:** opening a file to edit, writing a test, or running a plan step right after the plan is approved. That means you skipped the handoff. Invoke `executing-plans` instead.
 
-State that read to the user in 2-3 lines, then pick the route yourself and proceed — do not ask:
+## HTML Plan
 
-- **Fast path** — small, localized, approach is obvious. Skips the architecture tournament (Phase 2) and plans directly. Use for most single-subsystem changes.
-- **Thorough path** — large, unfamiliar, or design ambiguity worth comparing approaches. Runs the multi-agent architecture tournament (Phase 2).
+One self-contained `.html` file — inline all CSS; no external fonts, scripts, or network requests. It must read cleanly for a human skimming in a browser **and** contain everything the builder needs. Structure it top-to-bottom:
 
-Default to Fast; take the Thorough path only when the scope read surfaced real ambiguity or breadth. Announce the chosen route in one line ("Taking the fast path — single subsystem, obvious approach") and continue. The user can redirect if they disagree; don't block on `AskUserQuestion`.
+1. **Header** — feature name, one-sentence goal, 2–3 sentence approach.
+2. **Visual overview** — the plan's payoff over a markdown doc. Show *structure* the builder can't infer cheaply from prose, drawn as inline HTML/CSS/SVG (self-contained, no mermaid, no MCP, no external service):
+   - **Control flow / sequencing** when non-obvious (multiple actors, async, retries).
+   - **Architecture / module boundaries** — boxes showing how the touched pieces connect.
+   - **Data model / schema** changes — entity boxes with fields and relationships.
+   - **State machines** — states as nodes with labeled transitions.
 
-Exploration is implicit: read the change site, trace patterns, and orient as needed while planning. On the thorough path the architect agents trace their own ground (Phase 2); the parallel-implementation/call-site enumeration happens while mapping files (Phase 3).
+   Draw only what carries structure prose can't — skip diagrams for a two-step linear flow or a single-file change.
+3. **Task breakdown** — the builder-facing substance. For each task: the files to create/modify/test (exact paths, with line numbers for modifications), what to do (test-first, referencing the pattern to follow at file:line and the sibling call sites that must change in lockstep), the exact verify command with its expected outcome, and the commit message. No code blocks — describe and point.
+4. **Key decisions & risks** — non-obvious choices, rejected alternatives, risks worth flagging. One line each. "None — straightforward implementation." if there are none.
+5. **How we'll know it works** — the overall user-visible proof.
 
-**Output:** Single-vs-split decision (by subsystem and by size), the scope read, and the chosen route.
-
----
-
-### 2. Architecture Design
-
-**Skip this phase entirely on the fast path** — go to Phase 3.
-
-**Thorough path:** Launch 2-3 development:code-architect agents in parallel with different focuses — minimal changes (smallest change, maximum reuse), clean architecture (maintainability, elegant abstractions), or pragmatic balance (speed + quality). Each architect traces the change site and its patterns itself as part of designing its approach — there is no separate exploration pass feeding them. **Only if** the change plausibly makes existing code dead or consolidatable, add one `development:code-simplifier` agent to the same batch (analysis only — it must not edit) to flag dead branches, duplication to consolidate, and abstractions to collapse; skip it when the change is purely additive. Review all approaches and form a recommendation. **Default the recommendation to the leanest approach that meets the spec** — the clean-architecture approach wins only where its abstractions have a concrete second caller or a named, near-term need; otherwise prefer fewer files, fewer layers, and reuse over new structure.
-
-**Output:** Brief summary of each approach, trade-offs comparison, recommendation with reasoning, and any simplification opportunities worth folding into the plan. Present to user and wait for confirmation before continuing.
-
-**HARD GATE: do NOT ask the user to pick an approach (via AskUserQuestion or otherwise) until the per-approach summaries and trade-offs have been output as visible text in the conversation.** Labels like "Approach A/B/C" mean nothing to the user on their own — each option must have already been described (what it changes, its key trade-off) before any selection question, and the question's option descriptions must restate the one-line essence of each approach. The architects' raw outputs are in your context, not the user's — having read them is not a substitute for showing the comparison.
-
----
-
-### 3. File Structure
-
-**Task:** Map out all files to create or modify. Each file gets one clear responsibility. Follow established codebase patterns. Files that change together should live together — split by responsibility, not technical layer.
-
-As part of mapping files, enumerate **every parallel/duplicate implementation and call site** of the code being changed — sibling handlers, the same operation for another entity/platform, copy-pasted branches. This completeness check is non-negotiable: a change that touches one of these must touch all of them, and the file map is where they get caught (file:line each).
-
-**Output:** File map with each file's responsibility, plus every parallel implementation or sibling call site that must change in lockstep (file:line each). This locks in decomposition decisions.
-
----
-
-### 4. Draft & Approve the Human Summary
-
-**This is the single human checkpoint.** The user approves the concise, plain-English summary here. Everything downstream (task division, execution, PR, review) then runs hands-off; they should not have to approve again.
-
-**Task:**
-
-1. Present the concise human-readable summary **inline in the conversation** — do not write it to a file or open it with `SendUserFile`. See **Human Summary** under Output Format for its shape; keep it to one screen.
-2. Ask for approval of the summary using the `AskUserQuestion` widget — **always the widget, never a plain-text question the user has to notice and type a reply to.** A text question reads like the agent is still working and gets missed; the widget forces an explicit, unmissable choice. Ask one question (header e.g. "Approve plan?") with options like "Approve — proceed to task breakdown" and "Request changes" (the user can pick "Other" to type specifics). If they request changes, revise and re-present the summary inline, then ask again with the widget. Do not proceed to the task breakdown until the summary is approved via the widget.
-
-**Output:** An approved inline summary. This is the WHAT/HOW the user signed off on; the detailed task breakdown in Phase 5 must not deviate from it.
-
----
-
-### 5. Divide into Committable Tasks
-
-**This phase runs only after the summary is approved.** It is *not* a second approval of the substance — that was Phase 4. Its job is mechanical: chop the approved summary into the small, committable tasks the agent will execute, with exact file:line pointers, patterns, TDD steps, and commit messages.
-
-**Task:** Write the full detailed plan document to a plan file — `<feature-name>-plan.md` (kebab-case the feature name). Default location: the project's plans directory if one exists, else the scratchpad directory. This is the agent-facing artifact. After writing it, run the plan-document reviewer (`plan-document-reviewer-prompt.md`) over the draft and address any feedback before handing off. Do not re-litigate the approved approach; if dividing into tasks surfaces a genuine conflict with the approved summary, update the summary file and re-confirm with the user rather than silently diverging.
-
-**Seed the KB for execution.** As you write the task breakdown, you are already resolving every file:line pointer the tasks reference — capture that work so it isn't repaid downstream. Pick the run's KB source label — `orient:<feature-name>` (same kebab-case slug as the plan file) — and `ctx_index` the code files the tasks point at under that label. (Load the deferred `ctx_index`/`ctx_search` schema once via `ToolSearch`.) The default executor, `subagent-driven-development`, reuses this label so it does **not** re-explore the codebase from scratch — discovery is paid once, here. Record the label in the plan header so the handoff can pass it on. If the plan references only a handful of files you'd rather not index, skip seeding — omit the label and execution will do its own orientation.
-
-**Output:** Detailed plan file (with the KB source label in its header, if seeded), ready to hand off to execution.
-
----
-
-### 6. Hand Off to Execution
-
-**This phase runs once the plan file is written and reviewed.** Phase 5 ends at the finished plan file; only then does this phase begin.
-
-**Do not start building.** Writing the plan is the end of *this* skill's job. The moment the plan is written, STOP and hand off — even though the plan's tasks list exact files, TDD steps, and commit commands, you do not run them yourself in this conversation.
-
-**Task:**
-
-1. **Check for a systemic planning gap.** If review or the user's refinement exposed a *systemic* gap — a class of case the plan dropped that the planning process should have surfaced (e.g. "we keep missing concurrency") — invoke the `preventing-recurrence` sub-skill before handing off. Tell it the gap was caught *at planning*, so the fix lands in the planning machinery (this skill or the plan reviewer prompt), not downstream.
-2. **Clean up the phase checklist.** Delete every phase-tracking task this skill created (TaskUpdate with status `deleted`). The checklist was scaffolding for planning; leaving it alive makes every subsequent task in the session pile into it.
-3. **Then hand off execution.** By default, invoke the `subagent-driven-development` skill — it runs a persistent implementer+reviewer pair per stage, keeping the plan's churn off this session's context while running hands-off through to an opened PR and review. **If Phase 5 seeded a KB label, hand it that label** so it reuses the already-indexed code instead of re-exploring (its orientation pass then only adds the plan text + conventions overview). Fall back to `executing-plans` (direct in-session execution) only for a plan small enough that inline churn is cheap, or when the user explicitly asks to run it inline.
-
-**Output:** Execution begins under `subagent-driven-development` (or `executing-plans` for a small plan / explicit inline request), not under this skill.
-
-**Red flag — STOP if you catch yourself:** opening a file to edit, writing a test, or running a plan step right after the plan file is written. That means you skipped the handoff. Invoke `subagent-driven-development` instead.
-
----
-
-## Output Format
-
-### Plan Document Header
-
-Every plan MUST start with this header:
-
-```markdown
-# [Feature Name] Implementation Plan
-
-**Goal:** [One sentence describing what this builds]
-
-**Approach:** [2-3 sentences about approach]
-
-**KB source label:** `orient:<feature-name>` — *(omit this line if Phase 5 seeded no KB; the executor will orient itself)*
-
----
-```
-
-### Human Summary
-
-The Phase 5 summary is presented **inline in the conversation**, for the *human*, not the implementer. Strip everything an engineer needs but a decision-maker doesn't: no file:line pointers, no patterns-to-follow, no verification commands, no TDD steps. Plain English only, one screen max. Use this shape:
-
-```markdown
-# [Feature Name] — Plan Summary
-
-**What we're building:** [1-2 sentences, plain language — the outcome, not the mechanism]
-
-**How:** [2-3 sentences on the approach at a level a non-author can follow]
-
-## Steps
-1. [Task 1 as a one-line outcome — what will be true after this task]
-2. [Task 2 …]
-…
-
-## Key decisions & risks
-- [Any non-obvious choice made, alternative rejected, or risk worth flagging — one line each]
-
-**How we'll know it works:** [1-2 sentences on overall verification — the user-visible proof, not the test commands]
-```
-
-The summary is presented and approved *before* the detailed task division (Phase 5), so its steps are the high-level steps of the work — the Phase 5 task breakdown maps onto these (one task per step, or a step split into a few committable tasks), never contradicts them. If there were no notable decisions or risks, write "None — straightforward implementation." rather than padding.
-
-### Task Structure
-
-Each task is one coherent unit of work that ends in a passing test suite and a commit — and it is also one subagent's entire assignment, so it must stay reviewable as a single diff. Split at boundaries where the guidance genuinely changes (different subsystem, different pattern to follow, a checkpoint worth reviewing between them), **and** split a task that has grown too broad — it spans several unrelated concerns, you can't state its goal without saying "and also", or its diff would be too large to review in one pass — even when it all lives in one subsystem. Don't split merely to make tasks smaller, and don't break a task into write-test / run-test / implement / commit micro-steps; state the TDD expectation once and let the engineer execute it. Task count falls out of these boundaries, not a target you steer toward — most plans land around 3-7, but a genuinely broad feature needs more, and forcing it into fewer just makes each task too big to execute or review well.
-
-````markdown
-### Task N: [Component Name]
-
-**Files:**
-- Create: `exact/path/to/file.py`
-- Modify: `exact/path/to/existing.py:123-145`
-- Test: `tests/exact/path/to/test.py`
-
-**What to do:**
-
-Test-first: add tests to `tests/path/test.py` modeled after the existing test at `tests/path/test.py:45`, asserting that `function(input)` returns `expected` (cover the empty-input and duplicate-key cases — see `tests/path/test.py:60` for how those are set up). Then implement `function` in `src/path/file.py` following the pattern at `src/path/file.py:78`; see `src/path/other.py:12-30` for how similar logic is handled.
-
-**Verify:** `pytest tests/path/test.py -v` — all pass.
-
-**Commit:** `feat: add specific feature`
-````
-
-### Visual aids
-
-A diagram earns its place only when it carries structure prose can't carry cheaply — keep the same discipline as everything else here. Reach for one when:
-
-- **Control flow / sequencing** is non-obvious (multiple actors, async steps, retries) — boxes and arrows, or a numbered call sequence.
-- **Architecture / module boundaries** matter — boxes showing how the pieces the plan touches connect.
-- **Data model / schema** changes — entity boxes with their fields and the relationships between them.
-- **State machines** — states as nodes with labeled transition arrows.
-
-Draw these as **ASCII diagrams in a plain fenced block** (` ``` ` with no language tag) so they render as-is in the terminal, on GitHub, and in any editor — no rendering step, no MCP server, no external service. Don't diagram the trivial (a two-step linear flow, a single file's change). File maps stay as markdown tables or a tree in a fenced block; open questions stay as task-list checkboxes; annotated diffs stay as ` ```diff ` fences. The plan is still a single `.md` file.
-
-```
-   ┌──────────┐      request       ┌───────────┐
-   │  Client  │ ─────────────────▶ │  Handler  │
-   └──────────┘                    └─────┬─────┘
-                                         │ validate
-                                         ▼
-                                   ┌───────────┐
-                                   │   Store   │
-                                   └───────────┘
-```
-
-### Rules
-
-Every task must contain the actual content an engineer needs. These are **plan failures** — never write them:
-
-- "TBD", "TODO", "implement later", "fill in details"
-- "Add appropriate error handling" / "add validation" / "handle edge cases"
-- "Write tests for the above" without pointing to a specific file and reference pattern
-- "Similar to Task N" — repeat the pointer, the engineer may be reading tasks out of order
-- Changing one path while leaving its siblings untouched — when the same logic lives in multiple parallel places (sibling call sites, duplicated handlers, the same operation for another entity/platform), every task that modifies one MUST list all the others by file:line and apply the same change to each
-- Tasks that say what to do without pointing to where (exact file:line references required)
-- Code blocks — describe what to build and where to look, not what to write (ASCII diagrams are the exception — they show structure, not implementation; see Visual aids)
-- Micro-step checklists (write test / run test / implement / commit as separate steps) — that's the engineer's job to sequence, not the plan's
-- Over-broad tasks — one task spanning several unrelated concerns, or whose diff is too large to review in one pass; split it at the seam even within a single subsystem. Watch for the bundling tell: a title or goal you can only state with "and" between distinct concerns ("scaffold the dirs *and* retarget the model *and* update the templates *and* fix the callers"). Each task becomes one subagent's entire job, and a subagent can't be steered mid-run — an over-broad task grinds for a long time and produces an unreviewable diff before anyone can intervene. Split it into one focused task per concern.
-- Speculative scope — a task, abstraction, or new dependency with no concrete caller or named near-term need in this plan; cut it or mark it explicitly deferred
-- A new dependency for what the stdlib, a native platform feature, or a few lines already do
-
-Always use:
-
-- Exact file paths and line numbers — point to where things are, never write them out
-- Exact verification commands with expected outcome
-- DRY, YAGNI, TDD, one commit per task
+**Task-content rules** — these are plan failures, never write them:
+- "TBD" / "implement later" / "add appropriate error handling" / "handle edge cases"
+- "Write tests for the above" without a specific file and reference pattern
+- "Similar to Task N" — repeat the pointer; tasks may be read out of order
+- A task that changes one path while leaving its siblings untouched — list all parallel sites by file:line
+- A task that says what without where — exact file:line required
+- Code blocks — describe what to build and where to look, not what to write
+- Micro-step checklists — state the TDD expectation once, let the builder sequence it
+- Over-broad tasks — a goal you can only state with "and" between distinct concerns; split at the seam
+- Speculative scope, or a new dependency for what the stdlib / a native feature / a few lines already do
