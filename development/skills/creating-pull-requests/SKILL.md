@@ -1,15 +1,15 @@
 ---
 name: creating-pull-requests
-description: Use when opening a pull request, pushing a branch for review, or running `gh pr create` - ensures the PR body has a summary, a visual section with a mermaid diagram of the changes, a usage guide, and a test plan
+description: Use when opening a pull request, pushing a branch for review, or running `gh pr create` - ensures the PR body has a summary, a visuals section (a screenshot for UI-visible features and/or a mermaid diagram for architectural changes), a usage guide, and a test plan
 ---
 
 # Creating Pull Requests
 
 ## Overview
 
-A PR is read far more often than it is written. Every PR in this repo ships with the same four sections so reviewers can orient fast: **Summary**, **Visuals** (mermaid diagram of what changed), **Usage**, and **Test Plan**.
+A PR is read far more often than it is written. Every PR in this repo ships with the same four sections so reviewers can orient fast: **Summary**, **Visuals** (a screenshot for a UI-visible feature, a mermaid diagram for an architectural/decision change — often both), **Usage**, and **Test Plan**.
 
-**Core principle:** Inspect the diff → draft all four sections → embed a mermaid diagram → push → open PR with the full body.
+**Core principle:** Inspect the diff → draft all four sections → build the visuals (screenshot and/or mermaid) → push → open PR with the full body.
 
 **Announce at start:** "I'm using the creating-pull-requests skill to open this PR."
 
@@ -35,9 +35,25 @@ Run the project's test suite. If tests fail, fix them or call it out explicitly 
 
 Fill the template below. Every section is required — if one genuinely doesn't apply, keep the header and write one line explaining why (e.g. "No user-facing change").
 
-### Step 4: Build the Mermaid Diagram
+### Step 4: Build the Visuals
 
-The Visuals section MUST contain a mermaid diagram (GitHub renders ```mermaid fenced blocks natively — no image upload needed). Pick the diagram type that matches the change:
+The Visuals section adapts to the change. There are two kinds of visual, and a PR may need both — a mermaid diagram alone is NOT enough for a UI feature.
+
+**Screenshot — REQUIRED for a UI-visible feature.** If the change adds or alters a drivable visible surface (a web page, an app screen), the PR MUST show a screenshot of the feature actually running. (A backend/API/CLI-only change has no visible surface — skip the screenshot; the mermaid diagram or a "no user-facing UI" line covers it.)
+
+1. **Capture** the feature running, saving the PNG to the scratchpad directory:
+   - Prefer the **cmux browser** in a cmux workspace — drive to the feature and screenshot (see the `cmux-browser` skill).
+   - Otherwise use an **agent browser** (drive a browser via whatever browser automation is available) to load the surface and capture.
+   - Pick whichever is available; if neither is, say so in the section rather than faking it.
+2. **Upload** to get a GitHub-hosted URL. `gh` cannot embed images natively (no public attachments API), so use the `gh-image` extension:
+   ```bash
+   gh extension install drogers0/gh-image        # once per machine
+   url=$(gh image /path/to/screenshot.png)       # prints a github.com/user-attachments/assets/… URL
+   ```
+   `gh-image` authenticates via your browser's GitHub **session cookie** (a plain `gh auth` PAT will NOT work for the upload endpoint); if no cookie is available, supply the web-session token via `GH_SESSION_TOKEN`. Embed the URL in the body: `![feature](<url>)`.
+   - **Fallback** if the upload genuinely can't run (no session cookie/token here): commit the PNG into the branch and reference its `https://raw.githubusercontent.com/<owner>/<repo>/<branch>/<path>` URL, and note the fallback (this URL breaks if the branch is deleted after merge).
+
+**Mermaid diagram — for an architectural or decision change.** When the PR rewires control flow, call sequences, the data model, or a state machine, add a mermaid diagram of the **delta** (GitHub renders ```mermaid fenced blocks natively — no upload). Pick the type:
 
 | Change type | Diagram |
 |---|---|
@@ -46,7 +62,7 @@ The Visuals section MUST contain a mermaid diagram (GitHub renders ```mermaid fe
 | Data model / schema / type relationships | `erDiagram` or `classDiagram` |
 | State machine, status transitions | `stateDiagram-v2` |
 
-Diagram the **delta** — what this PR adds or rewires — not the entire system. If the change is purely textual (docs, config) and has no flow worth drawing, replace the diagram with a screenshot placeholder and say so.
+Diagram the **delta**, not the whole system. A pure UI feature with no architectural change needs only the screenshot; a backend refactor needs only the diagram; a feature that adds UI *and* rewires flow needs both. A purely textual change (docs, config) with neither: keep the header and write "No visual — <reason>".
 
 ### Step 5: Push and Open
 
@@ -66,8 +82,8 @@ Write the body to a file first (mermaid + checklists survive cleanly through `--
 
 ## Visuals
 
-<Mermaid diagram of the change. For UI changes, also add a screenshot:
-"![description](paste-image-url)".>
+<UI-visible feature → REQUIRED screenshot: "![feature](https://github.com/user-attachments/assets/…)".
+Architectural/decision change → mermaid diagram of the delta (below). Often both.>
 
 ​```mermaid
 flowchart LR
@@ -93,13 +109,15 @@ If nothing new is user-invocable, say so.>
 | Section | Must contain |
 |---|---|
 | Summary | What + why, impact-first bullets |
-| Visuals | A mermaid diagram of the delta (+ screenshot for UI) |
+| Visuals | Screenshot for a UI-visible feature (via cmux/agent browser + `gh image`); mermaid diagram of the delta for architectural changes; both when both apply |
 | Usage | Concrete invocation or "not user-invocable" |
 | Test Plan | Checklist of automated + manual verification |
 
 ## Common Mistakes
 
 - **Empty or omitted sections** — keep all four headers; explain inapplicability rather than deleting.
+- **A mermaid diagram standing in for a missing screenshot** — a UI-visible feature needs the actual screenshot; a diagram doesn't show the reviewer the feature.
+- **Committing the PNG into the repo when the upload path works** — use `gh image` for a permanent `user-attachments` URL; the raw-URL commit is only the fallback.
 - **Diagramming the whole system** — show only what this PR changes.
 - **Summarizing commit messages** — describe impact, not a git log replay.
 - **Heredoc PR bodies** — backticks and mermaid fences break; use `--body-file`.
@@ -107,6 +125,7 @@ If nothing new is user-invocable, say so.>
 
 ## Red Flags
 
-- About to run `gh pr create` without a mermaid diagram in the body → stop, add it.
+- About to open a PR for a UI-visible feature with no screenshot → stop, capture and embed it.
+- About to open a PR for an architectural/decision change with no mermaid diagram → stop, add it.
 - Test Plan with no concrete steps → reviewers can't reproduce; write real steps.
 - Body written from branch name instead of the actual diff → re-read the diff.
