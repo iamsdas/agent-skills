@@ -40,7 +40,7 @@ Do **not** split the build across multiple subagents or micro-manage it — one 
 Once the builder reports done, run this sequence automatically — no menu, no "what would you like to do?":
 
 1. **Verify the full suite.** Run the project's test command. If it fails, message the same builder (via SendMessage, its context intact) to fix it, or fix a small failure yourself. Do not open a PR on a red suite.
-2. **Open a PR, hands-off.** Invoke `creating-pull-requests` to push the branch and open the PR (summary, visuals — a screenshot for a UI-visible feature and/or a mermaid diagram — usage, test plan). Do not present the `finishing-a-development-branch` menu here.
+2. **Open a PR, hands-off.** Invoke `creating-pull-requests` to push the branch and open the PR (summary, mermaid visuals, usage, test plan). Do not present the `finishing-a-development-branch` menu here.
 3. **Review the diff.** Run the inbuilt `/code-review` skill over the branch diff.
 4. **Pause here.** Report the PR link and the review findings, then STOP. Do **not** merge or land the work — the human decides final integration. If they then want to merge locally / discard / clean up, that's when `finishing-a-development-branch` runs.
 

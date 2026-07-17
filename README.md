@@ -27,8 +27,7 @@ building-with-subagent  →  isolate the workspace (worktree/branch), then hand 
                            everything, then runs /code-review, then pauses
         ↓
    (building-with-subagent runs these automatically, hands-off, then pauses):
-   creating-pull-requests →  push branch + open PR (summary, visuals — screenshot for UI
-                             features / mermaid for architecture — usage, test plan)
+   creating-pull-requests →  push branch + open PR (summary, mermaid visuals, usage, test plan)
    /code-review           →  inbuilt pre-merge review of the diff
         ↓  ── PAUSE: you review the open PR and decide how to land it ──
 finishing-a-development-branch → only when you explicitly choose: local merge, or discard/cleanup
