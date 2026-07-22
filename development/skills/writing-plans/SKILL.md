@@ -21,6 +21,8 @@ This skill is deliberately lean — it is light enough to run on Fable. Plan dir
 
 **Point to code, don't write it.** The plan gives exact file paths and line numbers and names the pattern to follow — the builder reads the actual code. No code blocks in the plan.
 
+**Keep it skimmable — concision is a requirement, not a nicety.** The human approving this reads it in a browser; a wall of dense prose defeats the artifact. Each task line states *what* and *where* in a sentence or two, then stops. The *why* — rationale, rejected alternatives, caveats, trade-offs — lives once in **Key decisions & risks**, never woven inline into every file line. The builder is an Opus subagent that reads the real code; trust the pointer instead of narrating around it. No parenthetical asides stacked three deep, no restating a decision inside the task that the decisions section already carries. If a task line runs longer than about two sentences, you're writing prose the reviewer has to wade through — cut it or move the reasoning down.
+
 **Enumerate every parallel implementation.** As you map files, list every duplicate/sibling call site of the code being changed — sibling handlers, the same operation for another entity or platform, copy-pasted branches (file:line each). A change that touches one must touch all of them. This completeness check is non-negotiable.
 
 **Split into committable tasks.** Each task is one coherent slice that ends in a passing test suite and a commit, and stays reviewable as a single diff. Split where the guidance genuinely changes (different subsystem, different pattern, a checkpoint worth reviewing) or where one task has grown too broad to review in one pass. Most plans land at 3–7 tasks; a broad feature needs more. Don't split into write-test / run-test / implement micro-steps — state the TDD expectation once.
@@ -37,7 +39,7 @@ This skill is deliberately lean — it is light enough to run on Fable. Plan dir
 
 ## HTML Plan
 
-One self-contained `.html` file — inline all CSS; no external fonts, scripts, or network requests. It must read cleanly for a human skimming in a browser **and** contain everything the builder needs. Structure it top-to-bottom:
+One self-contained `.html` file — inline all CSS; no external fonts, scripts, or network requests. It must read cleanly for a human skimming in a browser **and** point the builder to everything it needs. Lean toward the shortest version that still lands every pointer; when in doubt, cut. Structure it top-to-bottom:
 
 1. **Header** — feature name, one-sentence goal, 2–3 sentence approach.
 2. **Visual overview** — the plan's payoff over a markdown doc. Show *structure* the builder can't infer cheaply from prose, drawn as inline HTML/CSS/SVG (self-contained, no mermaid, no MCP, no external service):
@@ -47,7 +49,7 @@ One self-contained `.html` file — inline all CSS; no external fonts, scripts, 
    - **State machines** — states as nodes with labeled transitions.
 
    Draw only what carries structure prose can't — skip diagrams for a two-step linear flow or a single-file change.
-3. **Task breakdown** — the builder-facing substance. For each task: the files to create/modify/test (exact paths, with line numbers for modifications), what to do (test-first, referencing the pattern to follow at file:line and the sibling call sites that must change in lockstep), the exact verify command with its expected outcome, and the commit message. No code blocks — describe and point.
+3. **Task breakdown** — the builder-facing substance, kept tight. For each task: the files to create/modify/test (exact paths, with line numbers for modifications), what to do in a sentence or two per file (test-first, referencing the pattern to follow at file:line and the sibling call sites that must change in lockstep), the exact verify command with its expected outcome, and the commit message. No code blocks — describe and point. Push rationale, alternatives, and caveats down into **Key decisions & risks**; a task line is an instruction, not an essay.
 4. **Key decisions & risks** — non-obvious choices, rejected alternatives, risks worth flagging. One line each. "None — straightforward implementation." if there are none.
 5. **How we'll know it works** — the overall user-visible proof.
 
@@ -61,3 +63,5 @@ One self-contained `.html` file — inline all CSS; no external fonts, scripts, 
 - Micro-step checklists — state the TDD expectation once, let the builder sequence it
 - Over-broad tasks — a goal you can only state with "and" between distinct concerns; split at the seam
 - Speculative scope, or a new dependency for what the stdlib / a native feature / a few lines already do
+- A task line longer than ~two sentences, or one carrying its own rationale/rejected-alternatives/caveats — that reasoning belongs in **Key decisions & risks**; the task line just says what and where
+- Stacked parentheticals and inline asides — one clause deep, then stop
