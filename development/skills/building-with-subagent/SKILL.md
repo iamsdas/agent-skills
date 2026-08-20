@@ -1,13 +1,13 @@
 ---
 name: building-with-subagent
-description: Use when you have a well-defined thing to build — an approved plan, a written spec, or a clear task — and want it built hands-off by an Opus subagent rather than implementing it inline.
+description: Use when you have a well-defined thing to build — an approved plan, a written spec, or a clear task — and want it built hands-off by a Sonnet subagent rather than implementing it inline.
 ---
 
 # Building with a Subagent
 
 ## Overview
 
-Hand a well-defined build off to **one Opus subagent** that implements the whole thing, then open a PR and run review — pausing only before final integration. The input can be anything self-sufficient: an approved HTML plan from `writing-plans`, a written spec, or a clear ad-hoc task. This session stays the orchestrator — it isolates the workspace, dispatches, waits, opens the PR, and reviews. It does not build.
+Hand a well-defined build off to **one Sonnet subagent** that implements the whole thing, then open a PR and run review — pausing only before final integration. The input can be anything self-sufficient: an approved HTML plan from `writing-plans`, a written spec, or a clear ad-hoc task. This session stays the orchestrator — it isolates the workspace, dispatches, waits, opens the PR, and reviews. It does not build.
 
 **The orchestrator never writes code.** Not a one-line fix, not a lint cleanup, not a "quick" test repair. Every code change — including fixing what the builder got wrong — goes back to the builder via SendMessage. The orchestrator's only tools are dispatch, verification, PR, and review.
 
@@ -31,7 +31,7 @@ Invoke `using-git-worktrees` to create an isolated worktree (or a new branch as 
 
 ### 3. Dispatch the Builder
 
-Dispatch **one** subagent via the Agent tool with `model: "opus"` and `subagent_type: "general-purpose"`, running in the background. Give it exactly this job:
+Dispatch **one** subagent via the Agent tool with `model: "sonnet"` and `subagent_type: "general-purpose"`, running in the background at medium thinking effort. Give it exactly this job:
 
 - Build what the handoff specifies. If it's a plan/spec with file:line pointers, patterns, verification commands, and commit messages, follow them; if it's a looser task, follow the codebase's existing patterns.
 - Follow TDD (test first, watch it fail, implement, watch it pass). Apply the same change to every parallel/sibling call site in lockstep.
@@ -68,7 +68,7 @@ This is the one intended pause.
 
 - Confirm the handoff is self-sufficient before dispatching; route vague work to `writing-plans` / `scope-requirements`.
 - Isolate the workspace (worktree or branch) **before** the builder starts.
-- One Opus builder owns the whole build — dispatch, don't micro-manage.
+- One Sonnet builder owns the whole build — dispatch, don't micro-manage.
 - **The orchestrator never writes code.** Every fix, however trivial, routes back to the builder via SendMessage.
 - Scoped tests in the builder's inner loop; the full suite runs once, at the end, by the orchestrator.
 - Draft PR first, then verify — CI and the local suite overlap on purpose.
