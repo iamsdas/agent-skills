@@ -17,6 +17,8 @@ You write test cases (pressure scenarios with subagents), watch them fail (basel
 
 **REQUIRED BACKGROUND:** You MUST understand test-driven-development before using this skill. That skill defines the fundamental RED-GREEN-REFACTOR cycle. This skill adapts TDD to documentation.
 
+**COMPANION SKILL:** Use **writing-for-agents** for what goes *in* the document: what to inline versus push behind a pointer, how to word a description so it fires reliably, completion criteria, and what to prune. This skill covers the *process* (baseline, write, pressure-test); that one covers the content.
+
 **Official guidance:** For Anthropic's official skill authoring best practices, see anthropic-best-practices.md. This document provides additional patterns and guidelines that complement the TDD-focused approach in this skill.
 
 ## What is a Skill?
