@@ -23,7 +23,7 @@ writing-plans           →  turn the agreed scope into a single self-contained 
                            The HTML is both the approval artifact and the builder's spec.
         ↓
 building-with-subagent  →  isolate the workspace (worktree/branch), then hand the
-                           approved HTML plan to ONE Opus builder subagent that builds
+                           approved HTML plan to a builder subagent that builds
                            everything, then runs /code-review, then pauses
         ↓
    (building-with-subagent runs these automatically, hands-off, then pauses):
@@ -33,7 +33,9 @@ building-with-subagent  →  isolate the workspace (worktree/branch), then hand 
 finishing-a-development-branch → only when you explicitly choose: local merge, or discard/cleanup
 ```
 
-> **One approval, then hands-off** — the single human checkpoint is approving the HTML plan in `writing-plans`. After that, everything runs without check-ins: `building-with-subagent` isolates the workspace, hands the plan to one Opus builder subagent, which builds all tasks, opens a PR, and runs the inbuilt `/code-review`, then **pauses** with the PR link and findings. It never merges on its own. The interactive merge/discard menu in `finishing-a-development-branch` only appears if you ask for it after the pause.
+> **One approval, then hands-off** — the single human checkpoint is approving the HTML plan in `writing-plans`. After that, everything runs without check-ins: `building-with-subagent` isolates the workspace and hands the plan to a builder subagent, which builds all tasks, opens a PR, and runs the inbuilt `/code-review`, then **pauses** with the PR link and findings. It never merges on its own. The interactive merge/discard menu in `finishing-a-development-branch` only appears if you ask for it after the pause.
+>
+> **Builders are disposable.** A builder is retired when it reports done, and each fix or continuation round gets a fresh one briefed from the branch — the commits, plan, and decisions log are the state, not the agent's conversation. Keeping one builder alive across review rounds was costing 3-5x the context of the build itself.
 >
 > `building-with-subagent` is generic — it also builds directly from a written spec or a clear ad-hoc task, not just a `writing-plans` HTML plan.
 
