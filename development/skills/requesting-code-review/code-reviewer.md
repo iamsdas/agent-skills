@@ -3,7 +3,7 @@
 Use this template when dispatching a `development:code-reviewer` subagent. The agent already knows how to review — just pass the context.
 
 ```
-Task tool (development:code-reviewer):
+Agent tool (subagent_type: development:code-reviewer):
   description: "Review code changes"
   prompt: |
     ## What Was Implemented

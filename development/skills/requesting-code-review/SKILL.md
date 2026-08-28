@@ -30,7 +30,7 @@ HEAD_SHA=$(git rev-parse HEAD)
 
 **2. Dispatch code reviewer subagent:**
 
-Use Task tool with `development:code-reviewer` subagent_type. Pass context using the template at `code-reviewer.md`.
+Use the Agent tool with `subagent_type: "development:code-reviewer"`. Pass context using the template at `code-reviewer.md`.
 
 **Placeholders:**
 - `{DESCRIPTION}` - Brief summary of what you built
@@ -73,18 +73,11 @@ You: [Fix progress indicators]
 
 ## Integration with Workflows
 
-**Subagent-Driven Development:**
-- Review after EACH task
-- Catch issues before they compound
-- Fix before moving to next task
-
-**Executing Plans:**
-- Review after each task or at natural checkpoints
-- Get feedback, apply, continue
-
-**Ad-Hoc Development:**
+**Ad-hoc development:**
 - Review before merge
 - Review when stuck
+
+**Under `building-with-subagent`:** that skill runs the inbuilt `/code-review` over the branch diff itself, and routes findings to a fresh fix builder. Don't dispatch a second reviewer on top of it.
 
 ## Red Flags
 
