@@ -7,7 +7,7 @@ description: Use when you have a clear spec or requirements for a multi-step cod
 
 ## Overview
 
-Produce **one self-contained HTML file** that is both the human's approval artifact and the complete spec handed to the builder. The human opens it in a browser, sees the plan laid out with clear visualizations, and approves. The builder (a single Opus subagent, dispatched by `building-with-subagent`) reads the same file and builds everything from it. One artifact, one approval, one handoff.
+Produce **one self-contained HTML file** that is both the human's approval artifact and the complete spec handed to the builder. The human opens it in a browser, sees the plan laid out with clear visualizations, and approves. The builder (a single subagent, dispatched by `building-with-subagent`, which owns the model choice) reads the same file and builds everything from it. One artifact, one approval, one handoff.
 
 This skill is deliberately lean — it is light enough to run on Fable. Plan directly: read the change site, trace the patterns, write the HTML. There is no architecture tournament, no multi-agent exploration pass, no separate markdown doc. If you catch yourself provisioning subagents to plan a localized change, stop.
 

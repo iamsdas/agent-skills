@@ -9,7 +9,9 @@ description: Use when you have a well-defined thing to build — an approved pla
 
 Hand a well-defined build off to **one Sonnet subagent** that implements the whole thing, then open a PR and run review — pausing only before final integration. The input can be anything self-sufficient: an approved HTML plan from `writing-plans`, a written spec, or a clear ad-hoc task. This session stays the orchestrator — it isolates the workspace, dispatches, waits, opens the PR, and reviews. It does not build.
 
-**The orchestrator never writes code.** Not a one-line fix, not a lint cleanup, not a "quick" test repair. Every code change — including fixing what the builder got wrong — goes back to the builder via SendMessage. The orchestrator's only tools are dispatch, verification, PR, and review.
+**The orchestrator never writes code.** Not a one-line fix, not a lint cleanup, not a "quick" test repair. Every code change — including fixing what the builder got wrong — goes to a builder. The orchestrator's only tools are dispatch, verification, PR, and review.
+
+**Builders are disposable; the branch is the state.** A builder is **retired** the moment it reports done, and every fix round afterwards goes to a **fresh** builder. Everything worth carrying forward already lives in the worktree — the commits, the plan or spec, the decisions log — so a new builder resumes from disk at a fraction of the context. Resuming a retired builder to save re-explaining is the expensive mistake: a builder kept alive across review rounds accumulates the entire history of the branch and ends up costing several times the build it performed.
 
 **Fast inner loop, one full suite at the end.** Per-commit verification runs only the tests touching the changed code. The full suite runs exactly once, by the orchestrator, after the builder reports done.
 
@@ -38,9 +40,10 @@ Dispatch **one** subagent via the Agent tool with `model: "sonnet"` and `subagen
 - **Keep the inner loop fast — never run the full test suite per change or per commit.** Run only the narrowest thing that covers the change: the single test, then that file, then at most that module/package. Use the test runner's filters (`-k`, `-t`, path args, `--only-changed`) rather than a bare test command. Skip full type-check/lint/build sweeps between commits too; scope them to changed files if the tooling allows.
 - A unit of work is done when its **scoped** tests pass. The full suite is the orchestrator's job at the end, not the builder's — run it at most once, before reporting done, and only if the project's suite is fast (under ~a minute).
 - **Commit per logical unit** with clear messages. Do not squash everything into one commit.
-- Self-review each diff before committing. Report final status: what was built, any deviations from the handoff and why, and the state of the test suite.
+- **Write down what the next builder will need.** Decisions taken, dead ends ruled out, and anything discovered that the handoff got wrong belong in the worktree — appended to the plan file or a `DECISIONS.md` — not left in the builder's head. This is what makes retirement cheap.
+- Self-review each diff before committing. Report final status: what was built, any deviations from the handoff and why, and the state of the test suite. **Then stop** — the build is the builder's whole job, and it is retired on that report.
 
-Do **not** split the build across multiple subagents or micro-manage it — one builder owns the whole build. Wait for the builder's completion notification before continuing.
+Do **not** split one build across parallel subagents or micro-manage it — a single builder owns the build from dispatch to its done report. Wait for the builder's completion notification before continuing.
 
 ### 4. Hands-Off Completion (draft PR first, then verify in parallel)
 
@@ -48,7 +51,15 @@ Once the builder reports done, run this sequence automatically — no menu, no "
 
 1. **Open a draft PR immediately.** Before any local verification, invoke `creating-pull-requests` to push the branch and build the full PR body (summary, mermaid visuals, usage, test plan). That skill takes no flags — **you** add `--draft` when you run its command: `gh pr create --draft --title "<title>" --body-file <path>`. Pushing first is the point: CI starts compiling and running the suite remotely while you work locally. Draft status is what makes this safe — the suite is unverified at this moment, so the PR must not read as ready for a human. Do not present the `finishing-a-development-branch` menu here.
 2. **Verify locally while CI runs.** With CI in flight, run the project's full test command — the first and only full-suite run on this machine; the builder deliberately stayed scoped. Run `/code-review` over the branch diff in the same window. Local verification and CI overlap by design; don't sit and watch the CI checks.
-3. **Reconcile both signals.** Collect the local suite result and the CI checks (`gh pr checks --watch` once local work is done). If either is red, message the same builder (via SendMessage, its context intact) with the failing output to fix it — **do not fix it yourself, however small it looks.** The builder re-runs scoped tests on the fix; you re-run the full suite and let CI re-run on the new push.
+3. **Reconcile both signals, then dispatch a fix builder.** Collect the local suite result and the CI checks (`gh pr checks --watch` once local work is done). If either is red — or `/code-review` found something that must change — dispatch a **fresh** Sonnet builder with a written brief and let the previous one stay retired. **Do not fix it yourself, however small it looks.** The brief is short because the branch carries the rest:
+
+   - the worktree path and branch, and the instruction to read the plan/spec and decisions log already there;
+   - `git log --oneline` of what the last builder committed;
+   - the failing output or review findings verbatim, and nothing else.
+
+   The fix builder re-runs scoped tests, commits, and reports done — then it is retired too. You re-run the full suite and let CI re-run on the new push.
+
+   **Two fix rounds, then stop.** If the branch is still red or still drawing must-fix review findings after two fix builders, the handoff or the plan is wrong, not the builder. Leave the PR in draft and surface it to the human with what each round attempted. Round three is thrash — nine rounds is a bill, not a build.
 4. **Mark ready, then pause.** Once local suite and CI are both green, flip the PR out of draft (`gh pr ready`). Report the PR link, CI status, and review findings, then STOP. Do **not** merge or land the work — the human decides final integration. If they then want to merge locally / discard / clean up, that's when `finishing-a-development-branch` runs.
 
 **Never leave a red PR marked ready.** A draft PR on an unverified branch is correct; a ready PR on a red one is not.
@@ -60,7 +71,7 @@ This is the one intended pause.
 **Stop and ask the user rather than guessing when:**
 - The handoff is too vague or contradictory to dispatch a builder against.
 - The builder reports it is genuinely blocked (missing dependency, contradictory instruction, verification that can't pass).
-- The full suite or CI is still red after the builder's fix attempt. Surface it — leave the PR in draft and do not pick up the keyboard yourself.
+- The full suite or CI is still red, or review still finds must-fix issues, after **two** fix builders. Surface it — leave the PR in draft and do not pick up the keyboard yourself.
 
 **Don't force through blockers** — surface them.
 
@@ -68,8 +79,10 @@ This is the one intended pause.
 
 - Confirm the handoff is self-sufficient before dispatching; route vague work to `writing-plans` / `scope-requirements`.
 - Isolate the workspace (worktree or branch) **before** the builder starts.
-- One Sonnet builder owns the whole build — dispatch, don't micro-manage.
-- **The orchestrator never writes code.** Every fix, however trivial, routes back to the builder via SendMessage.
+- One builder owns the whole build — dispatch with `model: "sonnet"` at medium thinking, and don't micro-manage.
+- **The orchestrator never writes code.** Every fix, however trivial, goes to a builder.
+- **Builders are retired on their done report.** Each fix round gets a fresh one, briefed from the branch — never a resumed one.
+- Two fix rounds, then surface to the human.
 - Scoped tests in the builder's inner loop; the full suite runs once, at the end, by the orchestrator.
 - Draft PR first, then verify — CI and the local suite overlap on purpose.
 - Don't skip verifications; never mark a PR ready on a red suite or red CI.
@@ -86,5 +99,3 @@ This is the one intended pause.
 **Upstream:** `writing-plans` hands its approved HTML plan here, but this skill also builds from a spec or a clear ad-hoc task directly.
 
 **Review:** the inbuilt `/code-review` skill handles the pre-merge diff review.
-
-**Future enhancement (not wired in):** Claude Code's experimental *agent teams* (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) could run the builder and a reviewer as coordinating teammates the orchestrator messages mid-build. Skipped for now — it's experimental and costs more tokens.
