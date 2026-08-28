@@ -41,9 +41,12 @@ Dispatch **one** subagent via the Agent tool with `model: "sonnet"` and `subagen
 - A unit of work is done when its **scoped** tests pass. The full suite is the orchestrator's job at the end, not the builder's — run it at most once, before reporting done, and only if the project's suite is fast (under ~a minute).
 - **Commit per logical unit** with clear messages. Do not squash everything into one commit.
 - **Write down what the next builder will need.** Decisions taken, dead ends ruled out, and anything discovered that the handoff got wrong belong in the worktree — appended to the plan file or a `DECISIONS.md` — not left in the builder's head. This is what makes retirement cheap.
+- **Hand off at a commit boundary once the build runs long.** Past roughly 150 turns, finish the unit in progress, commit it, bring the decisions log up to date, and report **partial-done**: what is built, what remains, and where to resume. Do not compact and carry on — a clean hand-off costs one brief, while a surviving builder pays for its whole history on every remaining turn.
 - Self-review each diff before committing. Report final status: what was built, any deviations from the handoff and why, and the state of the test suite. **Then stop** — the build is the builder's whole job, and it is retired on that report.
 
 Do **not** split one build across parallel subagents or micro-manage it — a single builder owns the build from dispatch to its done report. Wait for the builder's completion notification before continuing.
+
+If the builder reports **partial-done**, dispatch a continuation builder the same way you would a fix builder — worktree path and branch, `git log --oneline`, and the resume point it named — and let the first one stay retired. Sequential builders on one branch are the intended shape for a long build; parallel ones are not.
 
 ### 4. Hands-Off Completion (draft PR first, then verify in parallel)
 
@@ -82,6 +85,7 @@ This is the one intended pause.
 - One builder owns the whole build — dispatch with `model: "sonnet"` at medium thinking, and don't micro-manage.
 - **The orchestrator never writes code.** Every fix, however trivial, goes to a builder.
 - **Builders are retired on their done report.** Each fix round gets a fresh one, briefed from the branch — never a resumed one.
+- A long build hands off at a commit boundary (~150 turns) rather than compacting and carrying on.
 - Two fix rounds, then surface to the human.
 - Scoped tests in the builder's inner loop; the full suite runs once, at the end, by the orchestrator.
 - Draft PR first, then verify — CI and the local suite overlap on purpose.
