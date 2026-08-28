@@ -261,7 +261,7 @@ Always use subagents (50-100x context savings). REQUIRED: Use [other-skill-name]
 **Compress examples:**
 ```markdown
 # ❌ BAD: Verbose example (42 words)
-your human partner: "How did we handle authentication errors in React Router before?"
+The user: "How did we handle authentication errors in React Router before?"
 You: I'll search past conversations for React Router authentication patterns.
 [Dispatch subagent with search query: "React Router authentication error handling 401"]
 
@@ -333,7 +333,7 @@ digraph when_flowchart {
 
 See @graphviz-conventions.dot for graphviz style rules.
 
-**Visualizing for your human partner:** Use `render-graphs.js` in this directory to render a skill's flowcharts to SVG:
+**Visualizing for the user:** Use `render-graphs.js` in this directory to render a skill's flowcharts to SVG:
 ```bash
 ./render-graphs.js ../some-skill           # Each diagram separately
 ./render-graphs.js ../some-skill --combine # All diagrams in one SVG
