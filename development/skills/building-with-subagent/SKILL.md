@@ -1,17 +1,17 @@
 ---
 name: building-with-subagent
-description: Use when you have a well-defined thing to build — an approved plan, a written spec, or a clear task — and want it built hands-off by a Sonnet subagent rather than implementing it inline.
+description: Use when you have a well-defined thing to build — agreed scope, a written spec, or a clear task — and want it built hands-off by a Sonnet subagent rather than implementing it inline.
 ---
 
 # Building with a Subagent
 
 ## Overview
 
-Hand a well-defined build off to **one Sonnet subagent** that implements the whole thing, then open a PR and run review — pausing only before final integration. The input can be anything self-sufficient: an approved HTML plan from `writing-plans`, a written spec, or a clear ad-hoc task. This session stays the orchestrator — it isolates the workspace, dispatches, waits, opens the PR, and reviews. It does not build.
+Hand a well-defined build off to **one Sonnet subagent** that implements the whole thing, then open a PR and run review — pausing only before final integration. The input can be anything self-sufficient: agreed scope from `scope-requirements`, a written spec, or a clear ad-hoc task. This session stays the orchestrator — it isolates the workspace, dispatches, waits, opens the PR, and reviews. It does not build.
 
 **The orchestrator never writes code.** Not a one-line fix, not a lint cleanup, not a "quick" test repair. Every code change — including fixing what the builder got wrong — goes to a builder. The orchestrator's only tools are dispatch, verification, PR, and review.
 
-**Builders are disposable; the branch is the state.** A builder is **retired** the moment it reports done, and every fix round afterwards goes to a **fresh** builder. Everything worth carrying forward already lives in the worktree — the commits, the plan or spec, the decisions log — so a new builder resumes from disk at a fraction of the context. Resuming a retired builder to save re-explaining is the expensive mistake: a builder kept alive across review rounds accumulates the entire history of the branch and ends up costing several times the build it performed.
+**Builders are disposable; the branch is the state.** A builder is **retired** the moment it reports done, and every fix round afterwards goes to a **fresh** builder. Everything worth carrying forward already lives in the worktree — the commits, the spec or handoff, the decisions log — so a new builder resumes from disk at a fraction of the context. Resuming a retired builder to save re-explaining is the expensive mistake: a builder kept alive across review rounds accumulates the entire history of the branch and ends up costing several times the build it performed.
 
 **Fast inner loop, one full suite at the end.** Per-commit verification runs only the tests touching the changed code. The full suite runs exactly once, by the orchestrator, after the builder reports done.
 
@@ -25,7 +25,7 @@ Hand a well-defined build off to **one Sonnet subagent** that implements the who
 
 ### 1. Confirm What's Being Built
 
-The input must be self-sufficient enough for a subagent to build without further back-and-forth: a plan file, a spec, or a task with clear acceptance criteria. Read it. If it's vague, underspecified, or spans real design forks, **do not dispatch** — clarify with the user, or route to `writing-plans` (multi-step work) or `scope-requirements` (unclear product intent) first. A subagent can't be steered mid-run, so an ambiguous handoff produces an unreviewable diff.
+The input must be self-sufficient enough for a subagent to build without further back-and-forth: agreed scope, a spec, or a task with clear acceptance criteria. Read it. If it's vague, underspecified, or spans real design forks, **do not dispatch** — clarify with the user, or route to `scope-requirements` first. A subagent can't be steered mid-run, so an ambiguous handoff produces an unreviewable diff.
 
 ### 2. Isolate the Workspace (before anything is built)
 
@@ -35,12 +35,12 @@ Invoke `using-git-worktrees` to create an isolated worktree (or a new branch as 
 
 Dispatch **one** subagent via the Agent tool with `model: "sonnet"` and `subagent_type: "general-purpose"`, running in the background at medium thinking effort. Give it exactly this job:
 
-- Build what the handoff specifies. If it's a plan/spec with file:line pointers, patterns, verification commands, and commit messages, follow them; if it's a looser task, follow the codebase's existing patterns.
+- Build what the handoff specifies. If it's a spec with file:line pointers, patterns, verification commands, and commit messages, follow them; if it's a looser task, follow the codebase's existing patterns.
 - Follow TDD (test first, watch it fail, implement, watch it pass). Apply the same change to every parallel/sibling call site in lockstep.
 - **Keep the inner loop fast — never run the full test suite per change or per commit.** Run only the narrowest thing that covers the change: the single test, then that file, then at most that module/package. Use the test runner's filters (`-k`, `-t`, path args, `--only-changed`) rather than a bare test command. Skip full type-check/lint/build sweeps between commits too; scope them to changed files if the tooling allows.
 - A unit of work is done when its **scoped** tests pass. The full suite is the orchestrator's job at the end, not the builder's — run it at most once, before reporting done, and only if the project's suite is fast (under ~a minute).
 - **Commit per logical unit** with clear messages. Do not squash everything into one commit.
-- **Write down what the next builder will need.** Decisions taken, dead ends ruled out, and anything discovered that the handoff got wrong belong in the worktree — appended to the plan file or a `DECISIONS.md` — not left in the builder's head. This is what makes retirement cheap.
+- **Write down what the next builder will need.** Decisions taken, dead ends ruled out, and anything discovered that the handoff got wrong belong in the worktree — appended to the spec file or a `DECISIONS.md` — not left in the builder's head. This is what makes retirement cheap.
 - **Hand off at a commit boundary once the build runs long.** Past roughly 150 turns, finish the unit in progress, commit it, bring the decisions log up to date, and report **partial-done**: what is built, what remains, and where to resume. Do not compact and carry on — a clean hand-off costs one brief, while a surviving builder pays for its whole history on every remaining turn.
 - Self-review each diff before committing. Report final status: what was built, any deviations from the handoff and why, and the state of the test suite. **Then stop** — the build is the builder's whole job, and it is retired on that report.
 
@@ -56,13 +56,13 @@ Once the builder reports done, run this sequence automatically — no menu, no "
 2. **Verify locally while CI runs.** With CI in flight, run the project's full test command — the first and only full-suite run on this machine; the builder deliberately stayed scoped. Run `/code-review` over the branch diff in the same window. Local verification and CI overlap by design; don't sit and watch the CI checks.
 3. **Reconcile both signals, then dispatch a fix builder.** Collect the local suite result and the CI checks (`gh pr checks --watch` once local work is done). If either is red — or `/code-review` found something that must change — dispatch a **fresh** Sonnet builder with a written brief and let the previous one stay retired. **Do not fix it yourself, however small it looks.** The brief is short because the branch carries the rest:
 
-   - the worktree path and branch, and the instruction to read the plan/spec and decisions log already there;
+   - the worktree path and branch, and the instruction to read the spec or handoff and decisions log already there;
    - `git log --oneline` of what the last builder committed;
    - the failing output or review findings verbatim, and nothing else.
 
    The fix builder re-runs scoped tests, commits, and reports done — then it is retired too. You re-run the full suite and let CI re-run on the new push.
 
-   **Two fix rounds, then stop.** If the branch is still red or still drawing must-fix review findings after two fix builders, the handoff or the plan is wrong, not the builder. Leave the PR in draft and surface it to the human with what each round attempted. Round three is thrash — nine rounds is a bill, not a build.
+   **Two fix rounds, then stop.** If the branch is still red or still drawing must-fix review findings after two fix builders, the handoff itself is wrong, not the builder. Leave the PR in draft and surface it to the human with what each round attempted. Round three is thrash — nine rounds is a bill, not a build.
 4. **Mark ready, then pause.** Once local suite and CI are both green, flip the PR out of draft (`gh pr ready`). Report the PR link, CI status, and review findings, then STOP. Do **not** merge or land the work — the human decides final integration. If they then want to merge locally / discard / clean up, that's when `finishing-a-development-branch` runs.
 
 **Never leave a red PR marked ready.** A draft PR on an unverified branch is correct; a ready PR on a red one is not.
@@ -80,7 +80,7 @@ This is the one intended pause.
 
 ## Remember
 
-- Confirm the handoff is self-sufficient before dispatching; route vague work to `writing-plans` / `scope-requirements`.
+- Confirm the handoff is self-sufficient before dispatching; route vague work to `scope-requirements`.
 - Isolate the workspace (worktree or branch) **before** the builder starts.
 - One builder owns the whole build — dispatch with `model: "sonnet"` at medium thinking, and don't micro-manage.
 - **The orchestrator never writes code.** Every fix, however trivial, goes to a builder.
@@ -100,6 +100,6 @@ This is the one intended pause.
 - **creating-pull-requests** — pushes the branch and composes the PR body immediately after the builder finishes, so CI starts before local verification. It takes no flags: the orchestrator appends `--draft` to its `gh pr create` command itself, and later runs `gh pr ready`.
 - **finishing-a-development-branch** — only when the user explicitly chooses local merge / discard / cleanup after the pause.
 
-**Upstream:** `writing-plans` hands its approved HTML plan here, but this skill also builds from a spec or a clear ad-hoc task directly.
+**Upstream:** `scope-requirements` hands its agreed scope here; `writing-specs` and `receiving-code-review` hand over a settled spec and a triaged finding set. A clear ad-hoc task works directly.
 
 **Review:** the inbuilt `/code-review` skill handles the pre-merge diff review.

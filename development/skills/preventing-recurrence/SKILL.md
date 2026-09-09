@@ -83,7 +83,7 @@ Install the mechanism at the **earliest** point that could have caught the defec
 
 | Caught during | Push the mechanism into |
 |---|---|
-| Planning / plan refinement | the planning machinery: `writing-plans` / `scope-requirements` |
+| Scoping / requirements refinement | the scoping machinery: `scope-requirements` |
 | Code review / `/code-review` | one phase up — build/TDD discipline, or a `/code-review` pass/subagent that catches it next time; **+ a hook if mechanical** |
 | Receiving external feedback | same as review, and confirm the reviewer actually had context |
 | `investigate` (shipped bug) | the missing test + earliest detection (already core to `investigate`) |

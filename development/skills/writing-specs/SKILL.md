@@ -1,6 +1,6 @@
 ---
 name: writing-specs
-description: Use when authoring or updating a detailed specification in a spec-driven codebase, especially when reading or editing specs is slow — agents take too long to find the owning spec, understand scope, locate the code, or plan a change from it.
+description: Use when authoring or updating a detailed specification in a spec-driven codebase, especially when reading or editing specs is slow — agents take too long to find the owning spec, understand scope, locate the code, or scope a change from it.
 ---
 
 # Writing Specs
@@ -22,7 +22,7 @@ A spec is the single source of truth for one concept, detailed enough to plan an
 - **Announce:** Write exactly one line before starting: "I'm using the writing-specs skill to author/update the spec."
 - **Triage before writing.** Never open a blank spec file until Phase 1 has located where the concept belongs in the registry. Most "new spec" requests are edits to an existing owner.
 - **Detail is welcome — structure it.** Pin implementation modules, schemas, and contracts; mark each as shipped vs. target; point to code by module + symbol. The job is to make detail *findable*, not to remove it.
-- **Hand off to planning.** This skill produces or updates a spec; it does not implement. After the spec is settled, hand off to `writing-plans`.
+- **Hand off to the build.** This skill produces or updates a spec; it does not implement. After the spec is settled, hand off to `building-with-subagent`.
 
 ---
 
@@ -70,7 +70,7 @@ A spec is the single source of truth for one concept, detailed enough to plan an
 - **Navigable?** Are sections numbered so any fact has a `§N` address? Would a table or bold-term list scan faster than the prose you wrote?
 - **Decoupled?** Is every borrowed concept a `file.md §N` pointer, not a copy? Is every concept this file owns absent from all other specs? Are all coupled specs reachable via `See also`?
 
-**Output:** Confirmation on all four, then hand off to `writing-plans`.
+**Output:** Confirmation on all four, then hand off to `building-with-subagent`.
 
 ---
 
@@ -148,7 +148,7 @@ Always:
 
 ## Integration
 
-**Required follow-up skill:** Hand a settled spec to `writing-plans` to turn it into an implementation plan.
+**Required follow-up skill:** Hand a settled spec to `building-with-subagent`, which isolates a branch and dispatches a builder against it.
 
 **Subagents this skill uses:** `development:code-explorer` (Phase 1, to read the `overview.md` registry and candidate owners).
 

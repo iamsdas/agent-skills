@@ -89,7 +89,7 @@ These thoughts mean STOP—you're rationalizing:
 When multiple skills could apply, use this order:
 
 1. **Process skills first** (scope-requirements, investigate) - these determine HOW to approach the task
-2. **Implementation skills second** (writing-plans, test-driven-development) - these guide execution
+2. **Implementation skills second** (building-with-subagent, test-driven-development) - these guide execution
 
 "Let's build X" → scope-requirements first, then implementation skills.
 "Fix this bug" → investigate first, then domain-specific skills.

@@ -2,7 +2,7 @@
 
 A marketplace of Claude Code skills and subagents, organized into three plugins:
 
-- **`development/`** — skills and subagents for the full feature/bugfix lifecycle: scoping, planning, building, testing, reviewing, and shipping.
+- **`development/`** — skills and subagents for the full feature/bugfix lifecycle: scoping, building, testing, reviewing, and shipping.
 - **`utilities/`** — general-purpose helpers: meta-skills for authoring skills/agents, conversation tooling, and integrations.
 - **`ui/`** — frontend work: diagnosing why something looks wrong, exploring design options, and staying inside a codebase's existing conventions.
 
@@ -17,14 +17,12 @@ Skills are designed to chain. Two canonical flows:
 ### Building a feature / change
 
 ```
-scope-requirements      →  agree on WHAT and WHY (product intent, no implementation)
-        ↓
-writing-plans           →  turn the agreed scope into a single self-contained HTML plan
-                           (lean, runs on Fable). You open it in a browser and approve.
-                           The HTML is both the approval artifact and the builder's spec.
+scope-requirements      →  agree on WHAT and WHY (product intent, no implementation).
+                           You answer the refinement questions; the agreed scope is
+                           both the approval and the builder's brief.
         ↓
 building-with-subagent  →  isolate the workspace (worktree/branch), then hand the
-                           approved HTML plan to a builder subagent that builds
+                           agreed scope to a builder subagent that builds
                            everything, then runs /code-review, then pauses
         ↓
    (building-with-subagent runs these automatically, hands-off, then pauses):
@@ -34,11 +32,11 @@ building-with-subagent  →  isolate the workspace (worktree/branch), then hand 
 finishing-a-development-branch → only when you explicitly choose: local merge, or discard/cleanup
 ```
 
-> **One approval, then hands-off** — the single human checkpoint is approving the HTML plan in `writing-plans`. After that, everything runs without check-ins: `building-with-subagent` isolates the workspace and hands the plan to a builder subagent, which builds all tasks, opens a PR, and runs the inbuilt `/code-review`, then **pauses** with the PR link and findings. It never merges on its own. The interactive merge/discard menu in `finishing-a-development-branch` only appears if you ask for it after the pause.
+> **One approval, then hands-off** — the single human checkpoint is agreeing the scope in `scope-requirements`. After that, everything runs without check-ins: `building-with-subagent` isolates the workspace and hands the brief to a builder subagent, which builds it, opens a PR, and runs the inbuilt `/code-review`, then **pauses** with the PR link and findings. It never merges on its own. The interactive merge/discard menu in `finishing-a-development-branch` only appears if you ask for it after the pause.
 >
-> **Builders are disposable.** A builder is retired when it reports done, and each fix or continuation round gets a fresh one briefed from the branch — the commits, plan, and decisions log are the state, not the agent's conversation. Keeping one builder alive across review rounds was costing 3-5x the context of the build itself.
+> **Builders are disposable.** A builder is retired when it reports done, and each fix or continuation round gets a fresh one briefed from the branch — the commits, brief, and decisions log are the state, not the agent's conversation. Keeping one builder alive across review rounds was costing 3-5x the context of the build itself.
 >
-> `building-with-subagent` is generic — it also builds directly from a written spec or a clear ad-hoc task, not just a `writing-plans` HTML plan.
+> `building-with-subagent` is generic — it also builds directly from a written spec (`writing-specs`), a triaged review set (`receiving-code-review`), or a clear ad-hoc task, not just an agreed scope.
 
 ### Fixing a bug
 
@@ -47,20 +45,20 @@ investigate             →  diagnose: end-user impact, exact root cause, missin
         ↓
 (scope-requirements)    →  ONLY if the correct behavior needs product decisions
         ↓
-writing-plans / test-driven-development → plan and fix
+building-with-subagent / test-driven-development → fix it
         ↓
 requesting-code-review → /code-review → finishing-a-development-branch
 ```
 
 > **scope-requirements vs. investigate** — `investigate` looks *backward* (why is it broken?) and is the right entry point for a bug or error. `scope-requirements` looks *forward* (what should change?) and assumes you already know the desired behavior. For a bug, start with `investigate`; only reach for `scope-requirements` afterward if the fix involves real product decisions.
 
-> **preventing-recurrence (cross-cutting)** — not a phase but an *event handler*. Whenever a real defect or missing-logic gap is caught — during `writing-plans` refinement, `/code-review`, `receiving-code-review`, or `investigate` — those skills invoke `preventing-recurrence` to route the lesson into a durable mechanism (hook, skill/reviewer edit, project instruction, or memory) so the same class is caught automatically next time. It biases the fix toward the *earliest* point that could have caught the defect.
+> **preventing-recurrence (cross-cutting)** — not a phase but an *event handler*. Whenever a real defect or missing-logic gap is caught — during `scope-requirements` refinement, `/code-review`, `receiving-code-review`, or `investigate` — those skills invoke `preventing-recurrence` to route the lesson into a durable mechanism (hook, skill/reviewer edit, project instruction, or memory) so the same class is caught automatically next time. It biases the fix toward the *earliest* point that could have caught the defect.
 
 ---
 
 ## Subagents (always passive)
 
-Subagents in `development/agents/` are **never invoked directly by you** — skills and Claude dispatch them in the background (often in parallel) to do focused, context-isolated work. You'll see them referenced from within skills like `investigate`, `writing-plans`, and `scope-requirements`.
+Subagents in `development/agents/` are **never invoked directly by you** — skills and Claude dispatch them in the background (often in parallel) to do focused, context-isolated work. You'll see them referenced from within skills like `investigate`, `writing-specs`, and `scope-requirements`.
 
 | Agent | Dispatched to… |
 |-------|----------------|
