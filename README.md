@@ -21,8 +21,12 @@ scope-requirements      →  agree on WHAT and WHY (product intent, no implement
                            You answer the refinement questions; the agreed scope is
                            both the approval and the builder's brief.
         ↓
+(writing-plans)         →  ONLY if the change spans several files or subsystems:
+                           break the settled scope into committable tasks with
+                           file:line pointers, written to a markdown plan
+        ↓
 building-with-subagent  →  isolate the workspace (worktree/branch), then hand the
-                           agreed scope to a builder subagent that builds
+                           agreed scope (or the plan) to a builder subagent that builds
                            everything, then runs /code-review, then pauses
         ↓
    (building-with-subagent runs these automatically, hands-off, then pauses):
@@ -36,7 +40,9 @@ finishing-a-development-branch → only when you explicitly choose: local merge,
 >
 > **Builders are disposable.** A builder is retired when it reports done, and each fix or continuation round gets a fresh one briefed from the branch — the commits, brief, and decisions log are the state, not the agent's conversation. Keeping one builder alive across review rounds was costing 3-5x the context of the build itself.
 >
-> `building-with-subagent` is generic — it also builds directly from a written spec (`writing-specs`), a triaged review set (`receiving-code-review`), or a clear ad-hoc task, not just an agreed scope.
+> `building-with-subagent` is generic — it also builds directly from a written spec (`writing-specs`), a triaged review set (`receiving-code-review`), a task breakdown (`writing-plans`), or a clear ad-hoc task, not just an agreed scope.
+>
+> **writing-plans is optional.** It assumes scoping is done and only decides *where in the code* and *in what order* — worth it when the work spans several files or subsystems, skippable when the scope or spec already points at the change site. It adds no approval step: it writes the plan and hands off.
 
 ### Fixing a bug
 

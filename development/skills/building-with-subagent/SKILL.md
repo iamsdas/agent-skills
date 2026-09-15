@@ -100,6 +100,6 @@ This is the one intended pause.
 - **creating-pull-requests** — pushes the branch and composes the PR body immediately after the builder finishes, so CI starts before local verification. It takes no flags: the orchestrator appends `--draft` to its `gh pr create` command itself, and later runs `gh pr ready`.
 - **finishing-a-development-branch** — only when the user explicitly chooses local merge / discard / cleanup after the pause.
 
-**Upstream:** `scope-requirements` hands its agreed scope here; `writing-specs` and `receiving-code-review` hand over a settled spec and a triaged finding set. A clear ad-hoc task works directly.
+**Upstream:** `scope-requirements` hands its agreed scope here; `writing-plans` hands over a markdown task breakdown; `writing-specs` and `receiving-code-review` hand over a settled spec and a triaged finding set. A clear ad-hoc task works directly.
 
 **Review:** the inbuilt `/code-review` skill handles the pre-merge diff review.
