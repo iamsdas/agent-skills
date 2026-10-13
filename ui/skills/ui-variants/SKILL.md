@@ -11,6 +11,11 @@ One self-contained HTML file, written to disk and opened in the browser, showing
 several genuinely different takes on one piece of UI, so a decision gets made by
 looking instead of imagining.
 
+**Local file, not a published Artifact.** Write it to the path the user named,
+or else the scratchpad directory, then open it (`open` on macOS, `xdg-open` on
+Linux) and give the path. Don't publish it with the Artifact tool unless the
+user asks for a link.
+
 **Generating variants is easy; making them decidable is the job.** A strong
 model already produces different layouts. What it skips is everything that turns
 a gallery into a decision.

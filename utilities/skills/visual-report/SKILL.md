@@ -8,11 +8,13 @@ argument-hint: 'What should the report cover, and who is it for?'
 
 ## Overview
 
-Produce **one published Claude Artifact** that explains a body of work to someone who will never open the code. The reader wants to know what is true now, what it means for them, and roughly how it works. They do not want the build log.
+Produce **one self-contained HTML file** that explains a body of work to someone who will never open the code. The reader wants to know what is true now, what it means for them, and roughly how it works. They do not want the build log.
+
+**Local file, not a published Artifact.** Write the report to disk and open it in the browser. Do not publish it with the Artifact tool unless the user asks for a link; a report that "gets shared" is still a local file until they say otherwise.
 
 **Announce at start:** "I'm using the visual-report skill to build the report."
 
-**Required sub-skills:** load `artifact-design` before writing the file (the Artifact tool requires it), `artifact-diagramming` if the report carries diagrams, and run `unslop` over the finished prose.
+**Required sub-skills:** load `artifact-design` and `artifact-diagramming` (if the report carries diagrams) for their design guidance when they are available. Loading them does not mean publishing. Run `unslop` over the finished prose.
 
 **This skill only reports.** It does not fix, refactor, or extend the thing it describes. If gathering turns up a real problem, note it in one line and keep writing.
 
@@ -43,9 +45,9 @@ Structure, top to bottom:
 
 ## Make the Visuals Do the Explaining
 
-This is the whole point of the artifact. A reader skimming the page should get the story from the visuals alone, with the prose as backup. Every section in **The substance** earns one.
+This is the whole point of the report. A reader skimming the page should get the story from the visuals alone, with the prose as backup. Every section in **The substance** earns one.
 
-Draw everything as inline HTML, CSS, and SVG in the artifact itself. Self-contained: no external images, no charting library, no service round-trip.
+Draw everything as inline HTML, CSS, and SVG in the file itself. Self-contained: no external images, no charting library, no service round-trip.
 
 What tends to work:
 
@@ -66,9 +68,9 @@ What to refuse:
 1. **Establish what is actually true.** Read the diff, the docs, the running product, this conversation. Get the facts first; the report is worthless if it flatters.
 2. **Fix the audience.** If the user hasn't said who reads this and what they want out of it, ask once with `AskUserQuestion`, then proceed. Everything downstream depends on the answer, so it is worth one question.
 3. **Translate.** For each finding, write the one line a non-engineer would repeat to a colleague. If you can't write that line, the finding probably doesn't belong in the report.
-4. **Load `artifact-design`,** then write the HTML to the scratchpad directory as `<subject>-report.html`.
-5. **Run `unslop`** over every sentence in the file before publishing.
-6. **Publish** with the Artifact tool and hand the user the link, plus a two-line summary of what the report says.
+4. **Write the HTML** as `<subject>-report.html` to the path the user named, or else the scratchpad directory (system temp if there is none).
+5. **Run `unslop`** over every sentence in the file.
+6. **Open it** in the browser (`open` on macOS, `xdg-open` on Linux) and hand the user the file path, plus a two-line summary of what the report says. Offer in one line to publish it as an Artifact if they want a shareable link; publish only on a yes.
 
 ## Red Flags
 
