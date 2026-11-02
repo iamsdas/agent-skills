@@ -4,7 +4,7 @@ A marketplace of Claude Code skills and subagents, organized into three plugins:
 
 - **`development/`** — skills and subagents for the full feature/bugfix lifecycle: scoping, building, testing, reviewing, and shipping.
 - **`utilities/`** — general-purpose helpers: meta-skills for authoring skills/agents, conversation tooling, and integrations.
-- **`ui/`** — frontend work: diagnosing why something looks wrong, exploring design options, and staying inside a codebase's existing conventions.
+- **`ui/`** — frontend work: building UI that doesn't look generated, diagnosing why something looks wrong, exploring design options, and staying inside a codebase's existing conventions.
 
 This README explains **which skill to reach for**, **what order they chain in**, and **which are used passively** (auto-invoked by Claude rather than chosen by you).
 
