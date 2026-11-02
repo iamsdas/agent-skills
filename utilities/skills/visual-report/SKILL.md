@@ -54,7 +54,7 @@ What tends to work:
 - **Before and after,** side by side. The strongest visual in most reports, because it is the reader's actual question.
 - **A journey,** drawn as the steps a person moves through, with the changed step marked.
 - **A comparison,** where a number only means something next to another number.
-- **A labelled picture of the thing itself,** a mock of the screen or the document, with callouts.
+- **A labelled picture of the thing itself,** a mock of the screen or the document, with callouts. Read `mockups.md` before drawing one.
 
 What to refuse:
 

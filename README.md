@@ -82,13 +82,14 @@ Subagents in `development/agents/` are **never invoked directly by you** — ski
 
 ## UI work
 
-Three skills, split by what you're doing. They are deliberately repo-agnostic — project vocabulary belongs in that project's own `CLAUDE.md` or skills, not in here.
+Four skills, split by what you're doing. They are deliberately repo-agnostic — project vocabulary belongs in that project's own `CLAUDE.md` or skills, not in here.
 
 | Skill | Invoked | For |
 |-------|---------|-----|
 | **diagnosing-ui** | when you complain | You point at something and say it looks bad. Returns the named problem, the mechanism, and the fix — not an audit. |
 | **ui-variants** | when you ask | "Show me some options for X." Builds one HTML page of genuinely different takes, made decidable. |
 | **ui-conventions** | passively | Any CSS or styled-component edit. Puts a read of the existing vocabulary between the impulse and the file. |
+| **ui-taste** | passively | Building or redesigning a screen. Decides what leads and what goes, so the result doesn't look generated. The standard the other three judge against. |
 
 **Why these exist.** Generic design skills underperform inside a codebase that already has a partial design system. Two failure modes drove the split, both reproduced with baseline tests before anything was written:
 

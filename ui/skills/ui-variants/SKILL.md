@@ -43,6 +43,9 @@ aren't different enough.
 
 **Three to five.** Fewer doesn't span the space; more stops being comparable.
 
+Every variant still meets `ui-taste`. A variant that is just the "too much" or
+"flat" version of another isn't an option; it's a strawman.
+
 ## Required Elements
 
 Each came from a version that felt complete and wasn't.

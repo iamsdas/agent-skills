@@ -23,6 +23,9 @@ Add**
 
 Step 3 is where almost every miss happens.
 
+This skill owns values and vocabulary. What goes on the screen and what leads
+is `ui-taste`; on values, the repo wins.
+
 ## Before You Write
 
 If the repo's `CLAUDE.md`, its own skills, or stylesheet headers already answer

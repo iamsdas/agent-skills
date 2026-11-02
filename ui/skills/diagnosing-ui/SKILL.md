@@ -21,6 +21,10 @@ Two reflexes to resist: enumerating everything checkable and hoping the cause is
 in there, and reporting what grep can count. "The icon is too quiet to find" is
 invisible to grep and is more often the answer.
 
+When the complaint is about the whole composition ("looks generic", "looks
+cheap", "busy"), name it with `ui-taste`'s four failures: too much, flat,
+generic, filled.
+
 ## Step 1: Look First
 
 Diagnosing a perceptual complaint from source alone is a guess. If there's a
