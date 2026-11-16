@@ -32,6 +32,8 @@ building-with-subagent  →  isolate the workspace (worktree/branch), then hand 
    (building-with-subagent runs these automatically, hands-off, then pauses):
    creating-pull-requests →  push branch + open PR (summary, mermaid visuals, usage, test plan)
    /code-review           →  inbuilt pre-merge review of the diff
+   babysitting-pull-requests → watch CI + review bots (pr-wait) to the ready gate;
+                           real findings go to fresh fix builders
         ↓  ── PAUSE: you review the open PR and decide how to land it ──
 finishing-a-development-branch → only when you explicitly choose: local merge, or discard/cleanup
 ```
@@ -54,6 +56,16 @@ investigate             →  diagnose: end-user impact, exact root cause, missin
 building-with-subagent / test-driven-development → fix it
         ↓
 requesting-code-review → /code-review → finishing-a-development-branch
+```
+
+### Reviving an old PR
+
+```
+modernizing-pull-requests → establish the PR's intent, check what changed on the base,
+                           decide MODERNIZE / REWORK / CLOSE before pushing anything,
+                           then rebase and verify with git range-diff
+        ↓
+babysitting-pull-requests → (optional) carry it through CI and review bots
 ```
 
 > **scope-requirements vs. investigate** — `investigate` looks *backward* (why is it broken?) and is the right entry point for a bug or error. `scope-requirements` looks *forward* (what should change?) and assumes you already know the desired behavior. For a bug, start with `investigate`; only reach for `scope-requirements` afterward if the fix involves real product decisions.
@@ -109,4 +121,5 @@ Skills here borrow structure and ideas from prior art. Where something is derive
 | [jakubkrehel/skills](https://github.com/jakubkrehel/skills) (`interfaces`) | Form, mostly: the `Mistake \| Fix` "Before you finish" table, cue-gated checklists, calibration lines, and cheapest-fix ordering (Delete → Use the platform → Reuse → Correct → Add), which `diagnosing-ui` and `ui-conventions` both use. Its review posture and severity ladders were deliberately *not* carried over. |
 | [jakubkrehel/make-interfaces-feel-better](https://github.com/jakubkrehel/make-interfaces-feel-better) | The authoring pattern: name constants instead of adjectives, state the failure mode inside each anti-rule, and scope every rule with when it stops applying. |
 | [anthropics/claude-code](https://github.com/anthropics/claude-code) (`frontend-design`) | Its taxonomy of AI-design tells — the reflexes that make generated UI read as templated. |
+| [t3dotgg/tstack](https://github.com/t3dotgg/tstack) (MIT) | `babysitting-pull-requests` and its `pr-wait` script (copied verbatim with the license notice), `modernizing-pull-requests`, the problem-first summary and why-titles in `creating-pull-requests`, and the proof and ask-via-question rules in `building-with-subagent`. Its multi-model review skills (`council`, `sol-loop`) and the autonomous-merge `full-send` were deliberately *not* carried over. |
 | [obra/superpowers](https://github.com/obra/superpowers) | The TDD-for-skills method used to build these (baseline first, write against observed failures, retest), and much of `development/` and `utilities/`. |

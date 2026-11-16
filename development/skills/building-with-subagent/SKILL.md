@@ -53,8 +53,8 @@ If the builder reports **partial-done**, dispatch a continuation builder the sam
 Once the builder reports done, run this sequence automatically — no menu, no "what would you like to do?":
 
 1. **Open a draft PR immediately.** Before any local verification, invoke `creating-pull-requests` to push the branch and build the full PR body (summary, mermaid visuals, usage, test plan). That skill takes no flags — **you** add `--draft` when you run its command: `gh pr create --draft --title "<title>" --body-file <path>`. Pushing first is the point: CI starts compiling and running the suite remotely while you work locally. Draft status is what makes this safe — the suite is unverified at this moment, so the PR must not read as ready for a human. Do not present the `finishing-a-development-branch` menu here.
-2. **Verify locally while CI runs.** With CI in flight, run the project's full test command — the first and only full-suite run on this machine; the builder deliberately stayed scoped. Run `/code-review` over the branch diff in the same window. Local verification and CI overlap by design; don't sit and watch the CI checks.
-3. **Reconcile both signals, then dispatch a fix builder.** Collect the local suite result and the CI checks (`gh pr checks --watch` once local work is done). If either is red — or `/code-review` found something that must change — dispatch a **fresh** Sonnet builder with a written brief and let the previous one stay retired. **Do not fix it yourself, however small it looks.** The brief is short because the branch carries the rest:
+2. **Verify locally while CI runs.** With CI in flight, run the project's full test command — the first and only full-suite run on this machine; the builder deliberately stayed scoped. Run `/code-review` over the branch diff in the same window. Local verification and CI overlap by design; don't sit and watch the CI checks. **For UI or runtime behavior, also run the app and look at the change.** Green tests on mocks don't prove the user-facing behavior works. If you can't observe the change working, say so in the PR's Test Plan rather than implying it was verified.
+3. **Reconcile both signals, then dispatch a fix builder.** Collect the local suite result and the CI checks. Once local work is done, wait on CI with `babysitting-pull-requests`' `pr-wait --until green` under Monitor, not `gh pr checks --watch` or a sleep loop. If either is red — or `/code-review` found something that must change — dispatch a **fresh** Sonnet builder with a written brief and let the previous one stay retired. **Do not fix it yourself, however small it looks.** The brief is short because the branch carries the rest:
 
    - the worktree path and branch, and the instruction to read the spec or handoff and decisions log already there;
    - `git log --oneline` of what the last builder committed;
@@ -63,7 +63,7 @@ Once the builder reports done, run this sequence automatically — no menu, no "
    The fix builder re-runs scoped tests, commits, and reports done — then it is retired too. You re-run the full suite and let CI re-run on the new push.
 
    **Two fix rounds, then stop.** If the branch is still red or still drawing must-fix review findings after two fix builders, the handoff itself is wrong, not the builder. Leave the PR in draft and surface it to the human with what each round attempted. Round three is thrash — nine rounds is a bill, not a build.
-4. **Mark ready, then pause.** Once local suite and CI are both green, flip the PR out of draft (`gh pr ready`). Report the PR link, CI status, and review findings, then STOP. Do **not** merge or land the work — the human decides final integration. If they then want to merge locally / discard / clean up, that's when `finishing-a-development-branch` runs.
+4. **Mark ready, babysit to the ready gate, then pause.** Once local suite and CI are both green, flip the PR out of draft (`gh pr ready`). Many review bots skip drafts, so their reviews arrive now. Run `babysitting-pull-requests` until its ready gate passes: bots finished, each finding fixed or declined in-thread with a reason, branch current with its base. Real findings go to a fresh fix builder and count toward the two-round cap. Then report the PR link, CI status, and every review finding with its outcome, and STOP. Do **not** merge or land the work — the human decides final integration. If they then want to merge locally / discard / clean up, that's when `finishing-a-development-branch` runs.
 
 **Never leave a red PR marked ready.** A draft PR on an unverified branch is correct; a ready PR on a red one is not.
 
@@ -78,6 +78,8 @@ This is the one intended pause.
 
 **Don't force through blockers** — surface them.
 
+**Ask with `AskUserQuestion`, not a plain message.** This skill runs hands-off, so the user often isn't watching. A question buried in a normal message leaves the thread looking finished. Put the full context in the question itself: PR link, what blocks you, and the options with your recommendation first.
+
 ## Remember
 
 - Confirm the handoff is self-sufficient before dispatching; route vague work to `scope-requirements`.
@@ -89,6 +91,7 @@ This is the one intended pause.
 - Two fix rounds, then surface to the human.
 - Scoped tests in the builder's inner loop; the full suite runs once, at the end, by the orchestrator.
 - Draft PR first, then verify — CI and the local suite overlap on purpose.
+- After `gh pr ready`, babysit through review bots before pausing — the pause comes at the ready gate, not at the first green check.
 - Don't skip verifications; never mark a PR ready on a red suite or red CI.
 - Stop when blocked, don't guess.
 - Never build on `main`/`master` without explicit user consent.
@@ -98,6 +101,7 @@ This is the one intended pause.
 **Required workflow skills:**
 - **using-git-worktrees** — isolates the workspace before the builder starts.
 - **creating-pull-requests** — pushes the branch and composes the PR body immediately after the builder finishes, so CI starts before local verification. It takes no flags: the orchestrator appends `--draft` to its `gh pr create` command itself, and later runs `gh pr ready`.
+- **babysitting-pull-requests** — waits on CI with `pr-wait`, then carries the ready PR through review bots to its ready gate. Fixes still go to fresh builders.
 - **finishing-a-development-branch** — only when the user explicitly chooses local merge / discard / cleanup after the pause.
 
 **Upstream:** `scope-requirements` hands its agreed scope here; `writing-plans` hands over a markdown task breakdown; `writing-specs` and `receiving-code-review` hand over a settled spec and a triaged finding set. A clear ad-hoc task works directly.
